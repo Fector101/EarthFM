@@ -1,0 +1,29 @@
+<BaseMDNavigationItem>
+
+    MDNavigationItemIcon:
+        icon: root.icon
+
+    MDNavigationItemLabel:
+        text: root.text
+
+MDBoxLayout:  
+    orientation: "vertical"
+    md_bg_color: self.theme_cls.backgroundColor
+
+    MDScreenManager:
+        id:screen_manager
+
+    MDNavigationBar:
+
+        BaseMDNavigationItem:
+            icon: "gmail"
+            text: "Home"
+
+        BaseMDNavigationItem:
+            icon: "music"
+            text: "Recordings"
+            active: True
+
+        BaseMDNavigationItem:
+            icon: "linkedin"
+            text: "Podcasts"

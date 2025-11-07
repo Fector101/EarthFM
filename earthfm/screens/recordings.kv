@@ -1,0 +1,18 @@
+<ELabel@MDLabel>:
+    theme_font_size:"Custom"
+    theme_font_name:"Custom"
+
+MDScreen:
+    name:"recordings"
+    ScrollView:
+        BoxLayout:
+            size_hint_y:None
+            padding: [dp(10), dp(10)]
+            height:self.minimum_height
+            ELabel:
+                text:"Recordings"
+                font_size:"45sp"
+                font_name:app.bold_font
+                theme_text_color:"Custom"
+                text_color:app.theme_cls.primaryColor
+                adaptive_height:True

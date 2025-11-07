@@ -1,7 +1,8 @@
-import requests
-import os
-from os.path import join, exists, dirname
 import json
+import os
+from os.path import dirname, exists, join
+
+import requests
 
 
 class EarthFMBackend:
@@ -93,9 +94,3 @@ class EarthFMBackend:
             mood_recordings,
             all_recordings,
         )
-
-
-backend = EarthFMBackend()
-
-backend.home_page
-backend.recordings
