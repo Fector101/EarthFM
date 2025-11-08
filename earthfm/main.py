@@ -41,10 +41,10 @@ class EarthFMApp(MDApp):
     def build(self):
         # theme
 
-        self.theme_cls.primary_palette = "#FAB387"
+        self.theme_cls.primary_palette = "#025A4D"
         # original color
         # "#025A4D"
-        self.theme_cls.theme_style = "Light"
+        self.theme_cls.theme_style = "Dark"
 
         # loading image transparent
         Loader.loading_image = self.transparent_image
@@ -102,6 +102,11 @@ class EarthFMApp(MDApp):
 
     def on_start(self):
         self.thread.submit(self.fetch_recordings)
+        next_frame(self.open_mini_player, time=2)
+
+    def open_mini_player(self):
+        box = self.RecordingsUI.ids.small_player
+        Animation(y=dp(10), t="easing_standard", d=0.3).start(box)
 
 
 EarthFMApp().run()

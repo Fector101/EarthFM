@@ -1,11 +1,19 @@
+import math
+
+from kivy.animation import Animation
 from kivy.app import App
+from kivy.clock import Clock
+from kivy.graphics import Color, Line, Rectangle
+from kivy.lang import Builder
 from kivy.metrics import dp
-from kivy.properties import ColorProperty, DictProperty, ListProperty, StringProperty
+from kivy.properties import (ColorProperty, DictProperty, ListProperty,
+                             StringProperty)
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import AsyncImage
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.utils import get_color_from_hex
-from kivymd.uix.behaviors import StencilBehavior
+from kivymd.uix.behaviors import ScaleBehavior, StencilBehavior
 from kivymd.uix.navigationbar import MDNavigationBar, MDNavigationItem
 
 from earthfm.util import next_frame
@@ -24,7 +32,7 @@ class MoodSection(BoxLayout):
     data = ListProperty()
 
 
-class Recording(BoxLayout):
+class Recording(ButtonBehavior, ScaleBehavior,  BoxLayout):
     radius = ListProperty([dp(20)] * 4)
     data = DictProperty()
 
@@ -75,3 +83,29 @@ class Recording(BoxLayout):
         if data is self.data and not image.endswith(".webp"):
             # webp not supported by kivy
             self.canvas.get_group("img")[0].source = image
+
+
+
+class MusicProgress(BoxLayout):
+    progress = 0.5
+    amplitude = dp(5)
+    wave_speed = dp(30)
+    wavelenght = dp(20)
+
+    _time = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        Clock.schedule_interval(self._render_wave, 0)
+
+
+    def _render_wave(self, dt):
+        self._time += dt
+        points = []
+        sample_size = int((self.width * self.progress))
+        for pt in range(sample_size):
+            y = self.amplitude * math.sin(
+                (2 * math.pi / self.wavelenght) * (pt - self.wave_speed * self._time)
+            )
+            points.append([pt, self.height / 2 + y])
+        self.canvas.get_group("line")[0].points = points

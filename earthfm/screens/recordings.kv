@@ -8,7 +8,6 @@
     size_hint_x:None
     orientation:'vertical'
     padding: dp(10)
-
     canvas:
         Color:
             rgba:[0,0,0,0]
@@ -69,6 +68,15 @@
             width:self.minimum_width
 
 
+<MusicProgress>:
+    canvas:
+        Color:
+            rgba:[1, 1, 1, 1]
+        Line: 
+            group:"line"
+            width:2
+
+
 MDScreen:
     name:"recordings"
     
@@ -86,10 +94,25 @@ MDScreen:
             spacing:dp(10)
             
             ELabel:
-                text:"Recordings"
+                text:"EarthFM"
                 font_size:"45sp"
                 font_name:app.main_font
                 theme_text_color:"Custom"
                 text_color:app.theme_cls.primaryColor
                 padding:[0, 0, 0, dp(20)]
                 adaptive_height:True
+
+    MDBoxLayout:
+        id:small_player
+        size_hint_x:0.8
+        size_hint_y:None
+        height:dp(70)
+        radius:dp(20)
+        pos_hint:{"center_x":0.5}
+        y:-self.height - dp(10)
+        md_bg_color:app.theme_cls.surfaceContainerHighestColor
+        MusicProgress:
+
+
+
+
