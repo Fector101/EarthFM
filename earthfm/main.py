@@ -13,10 +13,10 @@ from earthfm.util import next_frame
 
 
 class EarthFMApp(MDApp):
-
     white_color = get_color_from_hex("#E9EFEC")
-    get_file = lambda self, file_name : os.path.join(
-        os.path.dirname(__file__), file_name, 
+    get_file = lambda self, file_name: os.path.join(
+        os.path.dirname(__file__),
+        file_name,
     )
 
     # transparent image
@@ -41,7 +41,9 @@ class EarthFMApp(MDApp):
     def build(self):
         # theme
 
-        self.theme_cls.primary_palette = "#025A4D"
+        self.theme_cls.primary_palette = "#FAB387"
+        # original color
+        # "#025A4D"
         self.theme_cls.theme_style = "Light"
 
         # loading image transparent
