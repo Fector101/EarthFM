@@ -103,6 +103,7 @@ class EarthFMApp(MDApp):
     def on_start(self):
         self.thread.submit(self.fetch_recordings)
         next_frame(self.open_mini_player, time=2)
+        self.RecordingsUI.ids.pg_bar.progress = 0.75
 
     def open_mini_player(self):
         box = self.RecordingsUI.ids.small_player

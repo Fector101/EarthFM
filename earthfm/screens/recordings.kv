@@ -74,7 +74,17 @@
             rgba:[1, 1, 1, 1]
         Line: 
             group:"line"
-            width:2
+            cap:"round"
+            joint:"round"
+            force_custom_drawing_method:True
+            width:1.1
+        Color:
+            rgba:[1,1,1,1]
+        RoundedRectangle:
+            size:[dp(5), dp(20)]
+            radius:[dp(2.5)] * 4
+            group:"handle"
+            pos:[0, self.height/2]
 
 
 MDScreen:
@@ -91,7 +101,7 @@ MDScreen:
             size_hint_y:None
             padding: [dp(10), dp(10)]
             height:self.minimum_height
-            spacing:dp(10)
+            spacing:dp(15)
             
             ELabel:
                 text:"EarthFM"
@@ -99,7 +109,7 @@ MDScreen:
                 font_name:app.main_font
                 theme_text_color:"Custom"
                 text_color:app.theme_cls.primaryColor
-                padding:[0, 0, 0, dp(20)]
+                padding:[0, 0, 0, dp(15)]
                 adaptive_height:True
 
     MDBoxLayout:
@@ -112,6 +122,7 @@ MDScreen:
         y:-self.height - dp(10)
         md_bg_color:app.theme_cls.surfaceContainerHighestColor
         MusicProgress:
+            id:pg_bar
 
 
 
