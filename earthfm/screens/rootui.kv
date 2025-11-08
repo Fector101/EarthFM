@@ -8,22 +8,7 @@
 
 MDBoxLayout:  
     orientation: "vertical"
-    md_bg_color: self.theme_cls.backgroundColor
+    md_bg_color: self.theme_cls.surfaceContainerColor
 
     MDScreenManager:
         id:screen_manager
-
-    MDNavigationBar:
-
-        BaseMDNavigationItem:
-            icon: "gmail"
-            text: "Home"
-
-        BaseMDNavigationItem:
-            icon: "music"
-            text: "Recordings"
-            active: True
-
-        BaseMDNavigationItem:
-            icon: "linkedin"
-            text: "Podcasts"

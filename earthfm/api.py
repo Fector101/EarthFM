@@ -1,8 +1,11 @@
 import json
 import os
-from os.path import dirname, exists, join
+import time
+from os.path import dirname, exists, getsize, join
 
 import requests
+
+from earthfm.util import next_frame
 
 
 class EarthFMBackend:
@@ -35,6 +38,69 @@ class EarthFMBackend:
 
         return data
 
+    def parse_images(self, data):
+        img_data = data["featuredImage"]["node"]["localFile"]["childImageSharp"][
+            "gatsbyImageData"
+        ]["images"]
+
+        def parse_srcset(srcset_string):
+            sources = []
+            for item in srcset_string.split(","):
+                parts = item.strip().split()
+                if len(parts) == 2:
+                    url, width_str = parts
+                    sources.append(
+                        {"url": url.strip(), "width": int(width_str.replace("w", ""))}
+                    )
+            return sources
+
+        fallback_images = parse_srcset(img_data["fallback"]["srcSet"])
+
+        webp_images = []
+        if len(img_data["sources"]) > 0:
+            webp_images = parse_srcset(img_data["sources"][0]["srcSet"])
+
+        return fallback_images, webp_images
+
+    # download only 4 images at a time
+    downloaders = 0
+
+    def get_image(self, recording_data, on_complete, quality=0):
+        # quality can be 0,1,2,3
+
+        # 0 -> 128px
+        # 1 -> 256px
+        # 2 -> 512px
+        # 3 -> 1024px
+
+        while self.downloaders > 3:
+            time.sleep(0.3)
+
+        jpg, webp = self.parse_images(recording_data)
+        selected_image = jpg[quality]["url"]
+
+        file = join(self.cache_dir, selected_image[1:])
+        if not exists(dirname(file)):
+            os.makedirs(dirname(file))
+        if exists(file) and getsize(file) <= 10:
+            os.remove(file)
+
+        if not exists(file):
+            # download it
+            self.downloaders += 1
+            with open(file, "wb") as file_ctx:
+                try:
+                    file_ctx.write(
+                        self.session.get(self.base_url + selected_image).content
+                    )
+                except Exception as e:
+                    os.remove(file)
+                    self.downloaders -= 1
+                    raise e
+            self.downloaders -= 1
+
+        next_frame(on_complete, recording_data, file)
+
     @property
     def home_page(self):
         page_data = self.get_json("page-data/index/page-data.json")
@@ -58,12 +124,12 @@ class EarthFMBackend:
 
         # mood id -> mood name
         mood_names = {}
+        mood_names["featured"] = "Featured"
 
         for mood in moods:
             mood_names[mood["id"]] = mood["name"]
 
         mood_names["other"] = "Other"
-        mood_names["featured"] = "Featured"
 
         # empty dict -> {moodid: [recordings...] }
         mood_recordings = dict.fromkeys(
@@ -87,7 +153,8 @@ class EarthFMBackend:
             "themeOptions"
         ]["featuredItems"]["featuredRecordings"]
 
-        # for mood in mood_recordings.keys(): print(mood_names[mood], len(mood_recordings[mood]))
+        # for mood in mood_recordings.keys():
+        #    print(mood_names[mood], len(mood_recordings[mood]))
 
         return (
             mood_names,

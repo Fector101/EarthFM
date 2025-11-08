@@ -2,17 +2,116 @@
     theme_font_size:"Custom"
     theme_font_name:"Custom"
 
+
+<Recording>:
+    data:{}
+    size_hint_x:None
+    orientation:'vertical'
+    padding: dp(10)
+
+    canvas:
+        Color:
+            rgba:[0,0,0,0]
+            group:"color"
+        RoundedRectangle:
+            size:self.size
+            pos:self.pos
+            radius:root.radius
+        RoundedRectangle:
+            size:self.size
+            pos:self.pos
+            radius:root.radius
+            group:"img"
+        RoundedRectangle:
+            size:self.size
+            pos:self.pos
+            radius:root.radius
+            source:app.get_file("assets/shadow-black.png")
+
+    Widget:
+
+    ELabel:
+        id:title
+        text:""
+        font_name:app.bold_font
+        font_size:"16sp"
+        adaptive_height:True
+        shorten:True
+        shorten_from:"right"
+        ellipsis_options:{"color":(0,0,0,0)}
+        text_color:app.white_color
+
+    ELabel:
+        id:artist
+        text:""
+        font_name:app.regular_font
+        font_size:"14sp"
+        adaptive_height:True
+        shorten:True
+        shorten_from:"right"
+        text_color:app.white_color
+
+    ELabel:
+        id:duration
+        text:""
+        font_name:app.regular_font
+        font_size:"14sp"
+        adaptive_size:True
+        text_color:app.white_color
+
+<MoodSection>:
+    max_entries:10
+    size_hint_y:None
+    height:dp(200)
+    mood:""
+    orientation:'vertical'
+    data:{}
+    
+    ELabel:
+        text:root.mood
+        font_name:app.bold_font
+        font_size:"20sp"
+        theme_text_color:"Custom"
+        text_color:app.theme_cls.primaryColor
+        adaptive_height:True
+
+    MDRecycleView:
+        data:root.data
+        key_viewclass: 'viewclass'
+        do_scroll_y: False
+        do_scroll_x:True
+        bar_color:0,0,0,0
+        bar_inactive_color:self.bar_color
+        effect_cls: "ScrollEffect"
+        RecycleBoxLayout:
+            default_size_hint: None, 1
+            default_size: self.height, 1
+            spacing:dp(10)
+            size_hint_x:None
+            width:self.minimum_width
+
+
 MDScreen:
     name:"recordings"
-    ScrollView:
+    
+    MDScrollView:
+        
+        do_scroll_y:True
+        do_scroll_x:False
+
         BoxLayout:
+            id:container
+            orientation:'vertical'
             size_hint_y:None
             padding: [dp(10), dp(10)]
             height:self.minimum_height
+            spacing:dp(10)
+            
             ELabel:
                 text:"Recordings"
                 font_size:"45sp"
-                font_name:app.bold_font
+                font_name:app.main_font
                 theme_text_color:"Custom"
                 text_color:app.theme_cls.primaryColor
+                padding:[0, 0, 0, dp(20)]
                 adaptive_height:True

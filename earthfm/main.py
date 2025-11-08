@@ -1,20 +1,34 @@
 import os
-from concurrent.futures import ThreadPoolExecutor
 
+from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.lang import Builder
+from kivy.loader import Loader
 from kivymd.app import MDApp
 
 from earthfm.api import EarthFMBackend
+from earthfm.thread import EarthFMThreadExecutor
 from earthfm.uidefs import *
 from earthfm.util import next_frame
 
 
 class EarthFMApp(MDApp):
-    # fonts
-    bold_font = ""
 
-    thread = ThreadPoolExecutor(max_workers=4)
+    white_color = get_color_from_hex("#E9EFEC")
+    get_file = lambda self, file_name : os.path.join(
+        os.path.dirname(__file__), file_name, 
+    )
+
+    # transparent image
+    transparent_image = get_file(None, "assets/transparent.png")
+
+    # fonts
+    main_font = "main.ttf"
+    bold_font = "PlusJakartaSans-Bold.ttf"
+    medium_font = "PlusJakartaSans-Medium.ttf"
+    regular_font = "PlusJakartaSans-Regular.ttf"
+
+    thread = EarthFMThreadExecutor()
     backend = EarthFMBackend()
 
     # root ui
@@ -25,16 +39,24 @@ class EarthFMApp(MDApp):
     RecordingsUI = None
 
     def build(self):
-
         # theme
 
         self.theme_cls.primary_palette = "#025A4D"
+        self.theme_cls.theme_style = "Light"
 
+        # loading image transparent
+        Loader.loading_image = self.transparent_image
         # font def
-        font_dir = os.path.join(os.path.dirname(__file__), "fonts")
-        self.bold_font = os.path.join(font_dir, "bold.ttf")
+        font_dir = self.get_file("fonts")
 
-        screen_dir = os.path.join(os.path.dirname(__file__), "screens")
+        for font in {"main", "regular", "medium", "bold"}:
+            setattr(
+                self,
+                f"{font}_font",
+                os.path.join(font_dir, getattr(self, f"{font}_font")),
+            )
+
+        screen_dir = self.get_file("screens")
 
         self.rootui = Builder.load_file(os.path.join(screen_dir, "rootui.kv"))
         self.screen_manager = self.rootui.ids.screen_manager
@@ -50,7 +72,31 @@ class EarthFMApp(MDApp):
 
     def on_fetch_recordings(self, data):
         mood_names, mood_recordings, all_recordings = data
-        print("recordingg fetcche!")
+
+        box = self.RecordingsUI.ids.container
+        widgets = []
+
+        for mood_name in mood_names.keys():
+            widget = MoodSection()
+            widget.mood = mood_names[mood_name]
+            widget.opacity = 0
+
+            data = []
+
+            for recording in mood_recordings[mood_name][:10]:
+                data.append({"viewclass": "Recording", "data": recording})
+
+            widget.data = data
+
+            widgets.append(widget)
+            box.add_widget(widget)
+
+        next_frame(self.show_widgets, widgets, time=0.5)
+
+    def show_widgets(self, widgets):
+        anim = Animation(opacity=1, d=0.3)
+        for widget in widgets:
+            anim.start(widget)
 
     def on_start(self):
         self.thread.submit(self.fetch_recordings)
