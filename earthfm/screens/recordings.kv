@@ -76,7 +76,6 @@
             group:"line"
             cap:"round"
             joint:"round"
-            force_custom_drawing_method:True
             width:1.3
         Color:
             rgba:app.theme_cls.onSecondaryContainerColor
@@ -85,7 +84,13 @@
             radius:[dp(2.5)] * 4
             group:"handle"
             pos:[0, self.height/2]
-
+        Color:
+            rgba:app.theme_cls.inverseSurfaceColor[:-1] + [0.5]
+        Line: 
+            group:"_line"
+            cap:"round"
+            joint:"round"
+            width:1.3
 
 MDScreen:
     name:"recordings"

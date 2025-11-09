@@ -41,7 +41,7 @@ class EarthFMApp(MDApp):
     def build(self):
         # theme
 
-        self.theme_cls.primary_palette = "#025A4D"
+        self.theme_cls.primary_palette = [0, 0, 1, 1]  # "#025A4D"
         # original color
         # "#025A4D"
         self.theme_cls.theme_style = "Dark"
@@ -101,8 +101,9 @@ class EarthFMApp(MDApp):
             anim.start(widget)
 
     def on_start(self):
-        self.thread.submit(self.fetch_recordings)
         next_frame(self.open_mini_player, time=2)
+        return
+        self.thread.submit(self.fetch_recordings)
         self.RecordingsUI.ids.pg_bar.progress = 0.5
 
     def open_mini_player(self):
