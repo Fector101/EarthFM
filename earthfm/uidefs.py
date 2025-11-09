@@ -148,16 +148,19 @@ class MusicProgress(BoxLayout):
 
     def on_touch_down(self, touch):
         handle = self.canvas.get_group("handle")[0]
+        
         if self.collide_instr(handle, touch.x, touch.y):
             touch.ud["moving_handle"] = handle
             Animation.cancel_all(self)
             Animation(_other_amplitude=0, t="easing_standard", d=0.3).start(self)
             return True
+
         padding = dp(5)
         bar_rx = self.x - padding
         bar_rw = self.width + dp(10)
         bar_ry = handle.pos[1] - padding
         bar_rh = handle.size[1] + dp(10)
+        
         if (bar_rx <= touch.x <= bar_rx + bar_rw) and (bar_ry <= touch.y <= bar_ry + bar_rh):
             target_x = touch.x - handle.size[0] / 2
             max_x = (self.x + self.width) - handle.size[0]
@@ -165,6 +168,7 @@ class MusicProgress(BoxLayout):
             range_w = self.width - handle.size[0]
             self.progress = (new_x - self.x) / range_w if range_w > 0 else 0.0
             return True
+        
         return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
