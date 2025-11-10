@@ -97,16 +97,19 @@ class EarthFMApp(MDApp):
 
     def show_widgets(self, widgets):
         self.RecordingsUI.ids.indicator.stop()
-        next_frame(Animation(opacity=0, d=0.3).start, self.RecordingsUI.ids.indicator, time=0.7)
+        next_frame(
+            Animation(opacity=0, d=0.3).start, self.RecordingsUI.ids.indicator, time=0.7
+        )
         anim = Animation(opacity=1, d=0.3)
         for widget in widgets:
             next_frame(anim.start, widget, time=1)
 
     def on_start(self):
-        self.RecordingsUI.ids.indicator.start()
-        next_frame(self.open_mini_player, time=2)
-        self.thread.submit(self.fetch_recordings)
         self.RecordingsUI.ids.pg_bar.progress = 0.5
+        next_frame(self.open_mini_player, time=2)
+        return
+        self.RecordingsUI.ids.indicator.start()
+        self.thread.submit(self.fetch_recordings)
 
     def open_mini_player(self):
         box = self.RecordingsUI.ids.small_player
