@@ -1,23 +1,23 @@
 from kivy.animation import Animation
 from kivy.uix.boxlayout import BoxLayout
 from kivy.lang import Builder
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty, ColorProperty
 from kivy.metrics import dp
 from kivy.clock import Clock
 import math
 
 Builder.load_string("""
-<WaveProgress>:
+<WaveProgressIndicator>:
     canvas:
         Color:
-            rgba:app.theme_cls.onSecondaryContainerColor
+            rgba:root.handle_color 
         Line: 
             group:"line"
             cap:"round"
             joint:"round"
             width:1.3
         Color:
-            rgba:app.theme_cls.onSecondaryContainerColor
+            rgba:root.handle_color
         RoundedRectangle:
             size:[dp(8), dp(20)]
             radius:[dp(2.5)] * 4
@@ -34,12 +34,13 @@ Builder.load_string("""
 
 
 # maybe we add this widget in kivymd?
-class WaveProgress(BoxLayout):
+class WaveProgressIndicator(BoxLayout):
     progress = NumericProperty(0.5)
     amplitude = dp(2.5)
     _other_amplitude = NumericProperty(amplitude)
     wave_speed = -dp(30)
     wavelenght = dp(27.5)
+    handle_color = ColorProperty([0,0,0,0])
 
     _time = 0
 

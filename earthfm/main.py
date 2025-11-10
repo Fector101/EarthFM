@@ -11,6 +11,10 @@ from earthfm.thread import EarthFMThreadExecutor
 from earthfm.uidefs import *
 from earthfm.util import next_frame
 
+from materialyoucolor.utils.theme_utils import custom_color
+from materialyoucolor.utils.color_utils import argb_from_rgba_01
+from materialyoucolor.hct import Hct
+
 
 class EarthFMApp(MDApp):
     white_color = get_color_from_hex("#E9EFEC")
@@ -41,10 +45,10 @@ class EarthFMApp(MDApp):
     def build(self):
         # theme
 
-        self.theme_cls.primary_palette = [0, 0, 1, 1]  # "#025A4D"
+        self.theme_cls.primary_palette = "#025A4D"
         # original color
         # "#025A4D"
-        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.theme_style = "Light"
 
         # loading image transparent
         Loader.loading_image = self.transparent_image
@@ -106,10 +110,47 @@ class EarthFMApp(MDApp):
 
     def on_start(self):
         self.RecordingsUI.ids.pg_bar.progress = 0.5
-        next_frame(self.open_mini_player, time=2)
-        return
         self.RecordingsUI.ids.indicator.start()
         self.thread.submit(self.fetch_recordings)
+
+    def play(self, data):
+        Animation(opacity=0, d=0.3).start(self.RecordingsUI.ids.p_img)
+        f = lambda : self.thread.submit(self.backend.get_image, data, self.set_player_image, 1)
+
+        color = custom_color(argb_from_rgba_01(get_color_from_hex(
+            data["featuredImage"]["node"]["localFile"]["childImageSharp"][
+                "gatsbyImageData"
+            ]["backgroundColor"]
+        )), source_color=argb_from_rgba_01(get_color_from_hex(self.theme_cls.primary_palette)), blend=True)
+        bg = color[self.theme_cls.theme_style.lower()]["onColorContainer"]
+        self.RecordingsUI.ids.pg_bar.handle_color = [_/255 for _ in bg]
+
+        # construct main string
+        title = data["title"]
+        mw = 24
+        ellipsis = "…" if len(title) > mw else ""
+
+        self.RecordingsUI.ids.p_text.text = (
+            f"[font={self.bold_font}]"
+            f"{title[:mw]}{ellipsis}"
+            "[/font]"
+            f"[size=14sp][font={self.regular_font}]\n"
+            f"{data['recordingSettings']['recordist']['title']}"
+            "[/font][/size]"
+        )
+
+        next_frame(f, time=0.3)
+        next_frame(self.open_mini_player, time=0.6)
+
+    def set_player_image(self, data, image):
+        if not image.endswith(".webp"):
+            # webp not supported by kivy
+            self.RecordingsUI.ids.p_img.source = image
+            Animation(opacity=1,d=0.3).start(self.RecordingsUI.ids.p_img)
+
+    def close_mini_player(self):
+        box = self.RecordingsUI.ids.small_player
+        Animation(y=-box.height - dp(10), t="easing_standard", d=0.3).start(box)
 
     def open_mini_player(self):
         box = self.RecordingsUI.ids.small_player

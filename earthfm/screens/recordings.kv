@@ -8,6 +8,7 @@
     size_hint_x:None
     orientation:'vertical'
     padding: dp(10)
+    on_release:app.play(self.data)
     canvas:
         Color:
             rgba:[0,0,0,0]
@@ -47,7 +48,7 @@
     ELabel:
         text:root.mood
         font_name:app.bold_font
-        font_size:"20sp"
+        font_size:"25sp"
         theme_text_color:"Custom"
         text_color:app.theme_cls.primaryColor
         adaptive_height:True
@@ -85,7 +86,7 @@ MDScreen:
             size_hint_y:None
             padding: [dp(10), dp(10)]
             height:self.minimum_height
-            spacing:dp(15)
+            spacing:dp(20)
             
             ELabel:
                 text:"EarthFM"
@@ -99,19 +100,36 @@ MDScreen:
     MDBoxLayout:
         id:small_player
         size_hint_x:0.8
-        size_hint_y:None
-        height:dp(70)
         radius:dp(20)
         pos_hint:{"center_x":0.5}
         y:-self.height - dp(10)
         md_bg_color:app.theme_cls.surfaceContainerHighestColor
-        orientation: 'vertical'
-        WaveProgress:
-            id:pg_bar
-        MDLabel:
-            text:str(int(pg_bar.progress*100))
-            adaptive_height:True
+        adaptive_height:True
+        spacing: dp(10)
+        padding: [dp(10), dp(10)]
+        
+        RoundedImage:
+            id:p_img
+            size_hint_x:None
+            width:self.height
+            radius:[dp(10)]*4
 
 
+        BoxLayout:
+            orientation: 'vertical'
 
+            size_hint_y:None
+            height:self.minimum_height
 
+            ELabel:
+                id:p_text
+                markup:True
+                text:""
+                adaptive_height:True
+            
+            Widget:
+
+            WaveProgressIndicator:
+                id:pg_bar
+                size_hint_y:None
+                height:dp(30)

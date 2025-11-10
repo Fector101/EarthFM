@@ -21,7 +21,7 @@ from kivymd.uix.behaviors import ScaleBehavior, StencilBehavior
 from kivymd.uix.navigationbar import MDNavigationBar, MDNavigationItem
 
 from earthfm.util import next_frame
-from earthfm.wave_progress import WaveProgress
+from earthfm.wi import WaveProgressIndicator
 
 
 class RoundedImage(AsyncImage, StencilBehavior):
