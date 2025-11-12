@@ -11,11 +11,11 @@ Builder.load_string("""
     canvas:
         Color:
             rgba:root.handle_color 
-        Line: 
+        SmoothLine: 
             group:"line"
             cap:"round"
             joint:"round"
-            width:1.3
+            width:dp(2)
         Color:
             rgba:root.handle_color
         RoundedRectangle:
@@ -24,23 +24,24 @@ Builder.load_string("""
             group:"handle"
             pos:[0, self.height/2]
         Color:
-            rgba:app.theme_cls.inverseSurfaceColor[:-1] + [0.5]
-        Line: 
+            rgba:root.handle_color[:-1] + [0.5]
+        SmoothLine: 
             group:"_line"
             cap:"round"
             joint:"round"
-            width:1.3
+            width:dp(2)
 """)
 
 
 # maybe we add this widget in kivymd?
 class WaveProgressIndicator(BoxLayout):
     progress = NumericProperty(0.5)
-    amplitude = dp(2.5)
+    amplitude = dp(3)
     _other_amplitude = NumericProperty(amplitude)
     wave_speed = -dp(30)
-    wavelenght = dp(27.5)
+    wavelenght = dp(40)
     handle_color = ColorProperty([0,0,0,0])
+    playing =  True
 
     _time = 0
 
@@ -80,6 +81,10 @@ class WaveProgressIndicator(BoxLayout):
         line = self.canvas.get_group("line")[0]
 
         _h = self.y + self.height / 2 - line.width / 2
+
+        if not self.playing:
+            self.canvas.get_group("line")[0].points = [[self.x+dp(1), _h],[sample_size, _h]]
+            return
 
         # using range(0, sample_size, 2)
         # will make it more efficient and easy on cpu?

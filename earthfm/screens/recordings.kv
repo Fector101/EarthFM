@@ -97,16 +97,22 @@ MDScreen:
                 padding:[0, 0, 0, dp(15)]
                 adaptive_height:True
 
-    MDBoxLayout:
+    BoxLayout:
         id:small_player
-        size_hint_x:0.8
-        radius:dp(20)
         pos_hint:{"center_x":0.5}
-        y:-self.height - dp(10)
-        md_bg_color:app.theme_cls.surfaceContainerHighestColor
-        adaptive_height:True
+        y:0
+        size_hint_y:None
+        height:self.minimum_height
         spacing: dp(10)
         padding: [dp(10), dp(10)]
+
+        canvas:
+            Color:
+                rgba:app.theme_cls.surfaceContainerHighestColor
+            RoundedRectangle:
+                size:self.size
+                pos:self.pos
+                radius:[dp(20), dp(20), 0, 0]
         
         RoundedImage:
             id:p_img
@@ -114,22 +120,57 @@ MDScreen:
             width:self.height
             radius:[dp(10)]*4
 
+            MDIconButton:
+                icon: "play"
+                style: "filled"
 
         BoxLayout:
             orientation: 'vertical'
-
             size_hint_y:None
             height:self.minimum_height
 
             ELabel:
-                id:p_text
+                id:t_text
                 markup:True
-                text:""
+                text:" "
+                shorten:True
+                shorten_from:"right"
                 adaptive_height:True
-            
-            Widget:
+                font_name:app.bold_font
 
-            WaveProgressIndicator:
-                id:pg_bar
+            ELabel:
+                id:a_text
+                text:" "
+                font_name:app.regular_font
+                font_size:"14sp"
+                adaptive_height:True
+
+            Widget:
                 size_hint_y:None
-                height:dp(30)
+                height:dp(10)
+                            
+
+            BoxLayout:
+
+                size_hint_y:None
+                height:dp(50)
+                orientation: 'vertical'
+                spacing:dp(8)
+
+                WaveProgressIndicator:
+                    id:pg_bar
+
+                BoxLayout:
+                    size_hint_y:None
+                    height:dp(10)
+                    ELabel:
+                        text:"0:00"
+                        font_size:"13sp"
+                        font_name:app.medium_font
+                        adaptive_size:True
+                    Widget:
+                    ELabel:
+                        text:"1:46:00"
+                        font_size:"13sp"
+                        font_name:app.medium_font
+                        adaptive_size:True

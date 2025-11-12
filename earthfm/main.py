@@ -48,7 +48,7 @@ class EarthFMApp(MDApp):
         self.theme_cls.primary_palette = "#025A4D"
         # original color
         # "#025A4D"
-        self.theme_cls.theme_style = "Light"
+        self.theme_cls.theme_style = "Dark"
 
         # loading image transparent
         Loader.loading_image = self.transparent_image
@@ -121,23 +121,15 @@ class EarthFMApp(MDApp):
             data["featuredImage"]["node"]["localFile"]["childImageSharp"][
                 "gatsbyImageData"
             ]["backgroundColor"]
-        )), source_color=argb_from_rgba_01(get_color_from_hex(self.theme_cls.primary_palette)), blend=True)
-        bg = color[self.theme_cls.theme_style.lower()]["onColorContainer"]
+        )), source_color=argb_from_rgba_01(get_color_from_hex(self.theme_cls.primary_palette)), blend=False)
+        bg = color[self.theme_cls.theme_style.lower()]["color"]
         self.RecordingsUI.ids.pg_bar.handle_color = [_/255 for _ in bg]
 
         # construct main string
         title = data["title"]
-        mw = 24
-        ellipsis = "…" if len(title) > mw else ""
-
-        self.RecordingsUI.ids.p_text.text = (
-            f"[font={self.bold_font}]"
-            f"{title[:mw]}{ellipsis}"
-            "[/font]"
-            f"[size=14sp][font={self.regular_font}]\n"
-            f"{data['recordingSettings']['recordist']['title']}"
-            "[/font][/size]"
-        )
+        
+        self.RecordingsUI.ids.a_text.text = data['recordingSettings']['recordist']['title']
+        self.RecordingsUI.ids.t_text.text =  data["title"]
 
         next_frame(f, time=0.3)
         next_frame(self.open_mini_player, time=0.6)
@@ -154,7 +146,7 @@ class EarthFMApp(MDApp):
 
     def open_mini_player(self):
         box = self.RecordingsUI.ids.small_player
-        Animation(y=dp(10), t="easing_standard", d=0.3).start(box)
+        Animation(y=0, t="easing_standard", d=0.3).start(box)
 
 
 EarthFMApp().run()
