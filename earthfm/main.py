@@ -1,5 +1,6 @@
 import os
 
+
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.lang import Builder
@@ -110,6 +111,12 @@ class EarthFMApp(MDApp):
     def on_start(self):
         self.RecordingsUI.ids.indicator.start()
         self.thread.submit(self.fetch_recordings)
+        Clock.schedule_interval(self._print_fps, 0.5)
+
+
+    def _print_fps(self, *largs):
+        print('FPS: %2.4f (real draw: %d)' % (
+            Clock.get_fps(), Clock.get_rfps()))
 
     def play(self, data):
         Animation(opacity=0, d=0.3).start(self.RecordingsUI.ids.p_img)
