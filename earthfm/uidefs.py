@@ -17,11 +17,13 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import AsyncImage
+from kivy.uix.label import CoreLabel
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.utils import get_color_from_hex
-from kivy.uix.label import CoreLabel
+
 from kivymd.uix.behaviors import ScaleBehavior, StencilBehavior
 from kivymd.uix.navigationbar import MDNavigationBar, MDNavigationItem
+from kivymd.uix.transition.transition import MDTransitionBase
 
 from earthfm.goverlay import GradientOverlay
 from earthfm.util import next_frame
@@ -30,9 +32,14 @@ from earthfm.wi import WaveProgressIndicator
 
 class MarqueeLabel(FloatLayout):
     overlay_color = ColorProperty()
+    font_name = StringProperty()
+    font_size = NumericProperty()
+
     spl = NumericProperty(0.2)
     text = StringProperty(" ")
+
     _text = ""
+    _main_label = None
     empty_str = "\u2003•\u2003"
     empty_str_width = 0
 
@@ -81,7 +88,7 @@ class MarqueeLabel(FloatLayout):
         Animation.cancel_all(self.ids.label)
         self.ids.label.x = self.x
         anim = Animation(
-            x=self.x - self.ids.label.width + self.width, d=len(self._text) * self.spl
+            x=self.x - self.ids.label.width + self.width, d=len(self._text) * 2 * self.spl
         )
         anim.bind(on_complete=self.loop_continue)
         anim.start(self.ids.label)
@@ -96,6 +103,68 @@ class MarqueeLabel(FloatLayout):
         )
         anim.bind(on_complete=self.loop_continue)
         anim.start(self.ids.label)
+
+
+class BottomPlayer(ButtonBehavior, BoxLayout):
+    radius = ListProperty([dp(20), dp(20), 0, 0])
+    is_open = False
+
+    def open(self):
+        self.is_open = True
+        Animation.cancel_all(self)
+        Animation(y=0, t="easing_standard", d=0.3).start(self)
+
+    def close(self):
+        self.is_open = False
+        Animation.cancel_all(self)
+        Animation(y=-self.height - dp(10), t="easing_standard", d=0.3).start(self)
+
+    def expand(self, on_complete=None):
+        op_duration = 0.2
+        anim = Animation(opacity=0, d=op_duration)
+        for child in self.children:
+            anim.start(child)
+
+        next_frame(
+            Animation(
+                height=self.parent.height,
+                y=0,
+                d=0.3,
+                radius=[0] * 4,
+                t="easing_standard",
+            ).start,
+            self,
+            time=op_duration,
+        )
+
+        if on_complete is not None:
+            next_frame(on_complete, time=op_duration + 0.4)
+
+    def contract(self):
+        Animation(
+            height=dp(80),
+            y=0,
+            d=0.3,
+            radius=[dp(20), dp(20), 0, 0] * 4,
+            t="easing_standard",
+        ).start(self)
+
+        op_duration = 0.2
+        anim = Animation(opacity=1, d=op_duration)
+
+        for child in self.children:
+            next_frame(anim.start, child, time=0.2 + op_duration)
+
+        next_frame(
+            self.parent.ids.t_text.on_text,
+            self.parent.ids.t_text,
+            self.parent.ids.t_text.text,
+            time=0.2 + op_duration,
+        )
+
+
+class MDFadeTransition(MDTransitionBase):
+    pass
 
 
 class RoundedImage(AsyncImage, StencilBehavior):

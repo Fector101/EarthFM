@@ -1,3 +1,21 @@
 MDScreen:
     name:"player"
+    md_bg_color:app.theme_cls.surfaceContainerHighestColor
 
+    MDIconButton:
+        icon:"chevron-down"
+        on_release:
+            if self.opacity > 0 :  app.screen_manager.switch_to(app.RecordingsUI)
+            if self.opacity > 0 :  app.next_frame(app.RecordingsUI.ids.btm_player.contract, time=0.3)
+        size_hint:[None, None]
+        size:[dp(50)] * 2
+        x:root.width - self.width - dp(10)
+        y:root.height - self.height - dp(10)
+
+    WaveProgressIndicator:
+        id:windicator
+        size_hint_x:0.7
+        size_hint_y:None
+        height:dp(50)
+        pos_hint:{"center_x":0.5, "center_y":0.5}
+        handle_color:app.theme_cls.primaryColor

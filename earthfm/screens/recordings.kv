@@ -8,7 +8,7 @@
     size_hint_x:None
     orientation:'vertical'
     padding: dp(10)
-    on_release:app.play(self.data)
+    on_release:app.currently_playing = self.data
     canvas:
         Color:
             rgba:[0,0,0,0]
@@ -137,23 +137,26 @@ MDScreen:
                         app.theme_cls.theme_style = "Dark" if self.active else "Light"
 
 
-    BoxLayout:
-        id:small_player
+    BottomPlayer:
+        id:btm_player
         pos_hint:{"center_x":0.5}
-        y:0
+        y:-self.height-dp(10)
         size_hint_y:None
         height:dp(80)
         spacing: dp(15)
         padding: [dp(10), dp(10), dp(10), 0]
         orientation:'vertical'
 
+        on_release:self.expand(lambda : app.screen_manager.switch_to(app.PlayerUI))
+
         canvas:
             Color:
                 rgba:app.theme_cls.surfaceContainerHighestColor
             RoundedRectangle:
+                group:"bg_rect"
                 size:self.size
                 pos:self.pos
-                radius:[dp(20), dp(20), 0, 0]
+                radius:btm_player.radius
         
         BoxLayout:
             spacing:dp(10)
@@ -178,15 +181,13 @@ MDScreen:
                     adaptive_height:True
 
             MDIconButton:
+                id:play_btn
                 icon: "play"
                 style: "filled"
-
-            MDIconButton:
-                icon: "skip-next"
-                style: "filled"
+                on_release:app.pause_play_icon(self)
 
         MDLinearProgressIndicator:
+            id:pg_indicator
             size_hint_y:None
             height:dp(5)
-            value: 50
             track_color:app.theme_cls.secondaryContainerColor

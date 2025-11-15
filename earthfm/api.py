@@ -11,6 +11,7 @@ from earthfm.util import next_frame
 class EarthFMBackend:
     base_url = "https://earth.fm/"
     cache_dir = ".cache"
+    sound_dir = "/home/tdynamos/Drive/EarthFM sounds/"
     session = None
 
     def __init__(self):
@@ -161,3 +162,37 @@ class EarthFMBackend:
             mood_recordings,
             all_recordings,
         )
+
+    
+    def get_sound(self, data, on_complete):
+
+        while self.downloaders > 3:
+            time.sleep(0.3)
+
+        sound = data["recordingSettings"]["audioUrl"]
+
+        sound_file = os.path.join(self.sound_dir,  os.path.basename(sound))
+
+        if not os.path.isdir(self.sound_dir):
+            os.mkdirs(self.sound_dir)
+
+        if exists(sound_file)   :
+            next_frame(on_complete, sound_file, data)
+            return
+
+
+        if not exists(sound_file):
+            # download it
+            self.downloaders += 1
+            with open(sound_file, "wb") as file_ctx:
+                try:
+                    file_ctx.write(
+                        self.session.get(sound).content
+                    )
+                except Exception as e:
+                    os.remove(sound_file)
+                    self.downloaders -= 1
+                    raise e
+            self.downloaders -= 1
+        
+        next_frame(on_complete, sound_file, data)

@@ -1,11 +1,18 @@
 import os
 
-
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.loader import Loader
+
+try:
+    from kivy.core.audio import SoundLoader
+except Exception:
+    from kivy.core.audio_output import SoundLoader
+
+
 from kivymd.app import MDApp
+
 from materialyoucolor.hct import Hct
 from materialyoucolor.utils.color_utils import argb_from_rgba_01
 from materialyoucolor.utils.theme_utils import custom_color
@@ -17,6 +24,13 @@ from earthfm.util import next_frame
 
 
 class EarthFMApp(MDApp):
+    
+    # for kv files
+    next_frame = lambda self, *arg, **kwargs: next_frame(*arg, **kwargs)
+    
+
+    currently_playing = DictProperty({})
+
     white_color = get_color_from_hex("#E9EFEC")
     get_file = lambda self, file_name: os.path.join(
         os.path.dirname(__file__),
@@ -66,9 +80,13 @@ class EarthFMApp(MDApp):
 
         self.rootui = Builder.load_file(os.path.join(screen_dir, "rootui.kv"))
         self.screen_manager = self.rootui.ids.screen_manager
+        self.screen_manager.transition = MDFadeTransition()
 
         self.RecordingsUI = Builder.load_file(os.path.join(screen_dir, "recordings.kv"))
         self.screen_manager.add_widget(self.RecordingsUI)
+
+        self.PlayerUI = Builder.load_file(os.path.join(screen_dir, "player.kv"))
+        self.screen_manager.add_widget(self.PlayerUI)
 
         return self.rootui
 
@@ -111,45 +129,15 @@ class EarthFMApp(MDApp):
     def on_start(self):
         self.RecordingsUI.ids.indicator.start()
         self.thread.submit(self.fetch_recordings)
-        Clock.schedule_interval(self._print_fps, 0.5)
-
+        Clock.schedule_interval(self.update_sound, 0.1)
+        # Clock.schedule_interval(self._print_fps, 0.5)
 
     def _print_fps(self, *largs):
-        print('FPS: %2.4f (real draw: %d)' % (
-            Clock.get_fps(), Clock.get_rfps()))
+        print("FPS: %2.4f (real draw: %d)" % (Clock.get_fps(), Clock.get_rfps()))
 
-    def play(self, data):
-        Animation(opacity=0, d=0.3).start(self.RecordingsUI.ids.p_img)
-        f = lambda: self.thread.submit(
-            self.backend.get_image, data, self.set_player_image, 1
-        )
 
-        color = custom_color(
-            argb_from_rgba_01(
-                get_color_from_hex(
-                    data["featuredImage"]["node"]["localFile"]["childImageSharp"][
-                        "gatsbyImageData"
-                    ]["backgroundColor"]
-                )
-            ),
-            source_color=argb_from_rgba_01(
-                get_color_from_hex(self.theme_cls.primary_palette)
-            ),
-            blend=False,
-        )
-        bg = color[self.theme_cls.theme_style.lower()]["color"]
-        # self.RecordingsUI.ids.pg_bar.handle_color = [_/255 for _ in bg]
+    #####
 
-        # construct main string
-        title = data["title"]
-
-        self.RecordingsUI.ids.a_text.text = data["recordingSettings"]["recordist"][
-            "title"
-        ]
-        self.RecordingsUI.ids.t_text.text = data["title"]
-
-        next_frame(f, time=0.3)
-        next_frame(self.open_mini_player, time=0.6)
 
     def set_player_image(self, data, image):
         if not image.endswith(".webp"):
@@ -157,13 +145,83 @@ class EarthFMApp(MDApp):
             self.RecordingsUI.ids.p_img.source = image
             Animation(opacity=1, d=0.3).start(self.RecordingsUI.ids.p_img)
 
-    def close_mini_player(self):
-        box = self.RecordingsUI.ids.small_player
-        Animation(y=-box.height - dp(10), t="easing_standard", d=0.3).start(box)
+    _current_sound = None
+    def on_currently_playing(self, instance, data):
+        
+        # stop if already playing
+        self.stop_sound()
 
-    def open_mini_player(self):
-        box = self.RecordingsUI.ids.small_player
-        Animation(y=0, t="easing_standard", d=0.3).start(box)
+        # update player image with animation
+        Animation(opacity=0, d=0.3).start(self.RecordingsUI.ids.p_img)
+        f = lambda: self.thread.submit(
+            self.backend.get_image, data, self.set_player_image, 1
+        )
+        next_frame(f, time=0.3)
+        
+        # set title and artist
+        self.RecordingsUI.ids.a_text.text = data["recordingSettings"]["recordist"][
+            "title"
+        ]
+        self.RecordingsUI.ids.t_text.text = data["title"]
+
+        # open player
+        if not self.RecordingsUI.ids.btm_player.is_open:
+            next_frame(self.RecordingsUI.ids.btm_player.open, time=0.6)
+
+        
+        # set music for loading
+        
+        self.RecordingsUI.ids.pg_indicator.type = "indeterminate"
+        self.RecordingsUI.ids.pg_indicator.value = 100
+        self.RecordingsUI.ids.pg_indicator.start()
+        
+        # get music and load into soundloader object
+        self.thread.submit(self.backend.get_sound, data, self.play_sound)
+
+    def update_sound(self, *args):
+        if self._current_sound is not None:
+            self.RecordingsUI.ids.play_btn.icon = "play" if self._current_sound.state == 'stop' else "pause" 
+            self.RecordingsUI.ids.pg_indicator.value = (self._current_sound.get_pos() / self._current_sound.length) * 100
+
+            self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
+
+    def pause_play_icon(self, widget):
+        if self._current_sound is not None:
+            if widget.icon == "play":
+                seek_value = (self.RecordingsUI.ids.pg_indicator.value/100) * self._current_sound.length
+                self._current_sound.play()
+                next_frame(self._current_sound.seek, seek_value)
+            else:
+                self._current_sound.stop()
+
+    def stop_sound(self):
+        if self._current_sound is not None:
+            self._current_sound.stop()
+            self._current_sound.unload()
+            self._current_sound = None
+
+    def play_sound(self, file, data):
+        if data is self.currently_playing:
+            
+            self._current_sound = SoundLoader().load(file)
+            self._current_sound.play()
+            self.RecordingsUI.ids.pg_indicator.stop()
+            self.RecordingsUI.ids.pg_indicator.value = 0
+
+    # color = custom_color(
+    #     argb_from_rgba_01(
+    #         get_color_from_hex(
+    #             data["featuredImage"]["node"]["localFile"]["childImageSharp"][
+    #                 "gatsbyImageData"
+    #             ]["backgroundColor"]
+    #         )
+    #     ),
+    #     source_color=argb_from_rgba_01(
+    #         get_color_from_hex(self.theme_cls.primary_palette)
+    #     ),
+    #     blend=False,
+    # )
+    # bg = color[self.theme_cls.theme_style.lower()]["color"]
 
 
 EarthFMApp().run()
