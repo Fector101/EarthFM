@@ -109,7 +109,6 @@ class EarthFMApp(MDApp):
             next_frame(anim.start, widget, time=1)
 
     def on_start(self):
-        self.RecordingsUI.ids.pg_bar.progress = 0.5
         self.RecordingsUI.ids.indicator.start()
         self.thread.submit(self.fetch_recordings)
 
@@ -123,7 +122,7 @@ class EarthFMApp(MDApp):
             ]["backgroundColor"]
         )), source_color=argb_from_rgba_01(get_color_from_hex(self.theme_cls.primary_palette)), blend=False)
         bg = color[self.theme_cls.theme_style.lower()]["color"]
-        self.RecordingsUI.ids.pg_bar.handle_color = [_/255 for _ in bg]
+        # self.RecordingsUI.ids.pg_bar.handle_color = [_/255 for _ in bg]
 
         # construct main string
         title = data["title"]

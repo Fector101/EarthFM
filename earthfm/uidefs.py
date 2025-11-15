@@ -21,8 +21,12 @@ from kivymd.uix.behaviors import ScaleBehavior, StencilBehavior
 from kivymd.uix.navigationbar import MDNavigationBar, MDNavigationItem
 
 from earthfm.util import next_frame
+from earthfm.goverlay import GradientOverlay
 from earthfm.wi import WaveProgressIndicator
 
+
+class LongLabel(RelativeLayout):
+    pass
 
 class RoundedImage(AsyncImage, StencilBehavior):
     pass

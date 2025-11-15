@@ -37,6 +37,38 @@
         adaptive_height:True
         text_color:app.white_color
 
+
+<LongLabel>:
+    size_hint:[1, None]
+    height:dp(30)
+    text:" "
+
+    ELabel:
+        text:root.text
+        adaptive_width:True
+        font_name:app.bold_font
+        x:0
+        canvas.before:
+            StencilPush
+            Rectangle:
+                pos: self.pos
+                size: root.width,self.size[1]
+            StencilUse
+        canvas.after:
+            StencilUnUse
+            Rectangle:
+                pos: self.pos
+                size: root.width, self.size[0]
+            StencilPop
+
+    GradientOverlay:
+        color:app.theme_cls.surfaceContainerHighestColor
+        fade_width:dp(20)
+        size_hint:[1,1]
+        x:self.parent.x + (self.parent.width-self.width)/2
+        y:self.parent.y + (self.parent.height-self.height)/2
+
+
 <MoodSection>:
     max_entries:10
     size_hint_y:None
@@ -102,9 +134,10 @@ MDScreen:
         pos_hint:{"center_x":0.5}
         y:0
         size_hint_y:None
-        height:self.minimum_height
-        spacing: dp(10)
-        padding: [dp(10), dp(10)]
+        height:dp(80)
+        spacing: dp(15)
+        padding: [dp(10), dp(10), dp(10), 0]
+        orientation:'vertical'
 
         canvas:
             Color:
@@ -114,63 +147,39 @@ MDScreen:
                 pos:self.pos
                 radius:[dp(20), dp(20), 0, 0]
         
-        RoundedImage:
-            id:p_img
-            size_hint_x:None
-            width:self.height
-            radius:[dp(10)]*4
+        BoxLayout:
+            spacing:dp(10)
+            
+            RoundedImage:
+                id:p_img
+                size_hint_x:None
+                width:self.height
+                radius:[dp(10)]*4
+
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y:None
+                
+                LongLabel:
+                    id:t_text
+
+                ELabel:
+                    id:a_text
+                    text:" "
+                    font_name:app.regular_font
+                    font_size:"14sp"
+                    adaptive_height:True
 
             MDIconButton:
                 icon: "play"
                 style: "filled"
 
-        BoxLayout:
-            orientation: 'vertical'
+            MDIconButton:
+                icon: "skip-next"
+                style: "filled"
+
+        MDLinearProgressIndicator:
             size_hint_y:None
-            height:self.minimum_height
-
-            ELabel:
-                id:t_text
-                markup:True
-                text:" "
-                shorten:True
-                shorten_from:"right"
-                adaptive_height:True
-                font_name:app.bold_font
-
-            ELabel:
-                id:a_text
-                text:" "
-                font_name:app.regular_font
-                font_size:"14sp"
-                adaptive_height:True
-
-            Widget:
-                size_hint_y:None
-                height:dp(10)
-                            
-
-            BoxLayout:
-
-                size_hint_y:None
-                height:dp(50)
-                orientation: 'vertical'
-                spacing:dp(8)
-
-                WaveProgressIndicator:
-                    id:pg_bar
-
-                BoxLayout:
-                    size_hint_y:None
-                    height:dp(10)
-                    ELabel:
-                        text:"0:00"
-                        font_size:"13sp"
-                        font_name:app.medium_font
-                        adaptive_size:True
-                    Widget:
-                    ELabel:
-                        text:"1:46:00"
-                        font_size:"13sp"
-                        font_name:app.medium_font
-                        adaptive_size:True
+            height:dp(5)
+            value: 50
+            track_color:app.theme_cls.secondaryContainerColor
