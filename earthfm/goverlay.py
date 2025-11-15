@@ -1,7 +1,7 @@
-from kivy.uix.widget import Widget
-from kivy.graphics import RenderContext, Rectangle
-from kivy.properties import ColorProperty, NumericProperty
+from kivy.graphics import Rectangle, RenderContext
 from kivy.metrics import dp
+from kivy.properties import ColorProperty, NumericProperty
+from kivy.uix.widget import Widget
 
 gradient_shader = """
 $HEADER$
@@ -28,13 +28,13 @@ void main()
         alpha = 0.0;
     }
 
-    gl_FragColor = vec4(u_color.rgb, alpha);
+    gl_FragColor = vec4(u_color.rgb, min(alpha, u_color[3]));
 }
 """
 
-class GradientOverlay(Widget):
 
-    color = ColorProperty([1, 0, 0, 1])
+class GradientOverlay(Widget):
+    color = ColorProperty([0, 0, 0, 0])
     fade_width = NumericProperty(dp(10))
 
     def __init__(self, **kwargs):
@@ -49,18 +49,14 @@ class GradientOverlay(Widget):
         self.bind(
             pos=self.update_rect,
             size=self.update_rect,
-            color=self.update_uniforms,
-            fade_width=self.update_uniforms,
         )
 
-        self.update_uniforms()
+    def on_color(self, instance, color):
+        self.canvas["u_color"] = list(float(_) for _ in self.color)
 
-    def update_uniforms(self, *args):
-        # cconvert px fade width into UV space (0 ➜ 1 across widget)
-        fade_uv = float(self.fade_width / max(1, self.width))
-
-        self.canvas['u_color'] = list(self.color)
-        self.canvas['u_fade'] = fade_uv
+    def on_fade_width(self, instance, fade_width):
+        fade_uv = float(fade_width / max(1, self.width))
+        self.canvas["u_fade"] = fade_uv
 
     def update_rect(self, *args):
         self.rect.pos = self.pos

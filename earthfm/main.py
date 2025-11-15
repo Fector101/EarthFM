@@ -5,15 +5,14 @@ from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.loader import Loader
 from kivymd.app import MDApp
+from materialyoucolor.hct import Hct
+from materialyoucolor.utils.color_utils import argb_from_rgba_01
+from materialyoucolor.utils.theme_utils import custom_color
 
 from earthfm.api import EarthFMBackend
 from earthfm.thread import EarthFMThreadExecutor
 from earthfm.uidefs import *
 from earthfm.util import next_frame
-
-from materialyoucolor.utils.theme_utils import custom_color
-from materialyoucolor.utils.color_utils import argb_from_rgba_01
-from materialyoucolor.hct import Hct
 
 
 class EarthFMApp(MDApp):
@@ -114,21 +113,33 @@ class EarthFMApp(MDApp):
 
     def play(self, data):
         Animation(opacity=0, d=0.3).start(self.RecordingsUI.ids.p_img)
-        f = lambda : self.thread.submit(self.backend.get_image, data, self.set_player_image, 1)
+        f = lambda: self.thread.submit(
+            self.backend.get_image, data, self.set_player_image, 1
+        )
 
-        color = custom_color(argb_from_rgba_01(get_color_from_hex(
-            data["featuredImage"]["node"]["localFile"]["childImageSharp"][
-                "gatsbyImageData"
-            ]["backgroundColor"]
-        )), source_color=argb_from_rgba_01(get_color_from_hex(self.theme_cls.primary_palette)), blend=False)
+        color = custom_color(
+            argb_from_rgba_01(
+                get_color_from_hex(
+                    data["featuredImage"]["node"]["localFile"]["childImageSharp"][
+                        "gatsbyImageData"
+                    ]["backgroundColor"]
+                )
+            ),
+            source_color=argb_from_rgba_01(
+                get_color_from_hex(self.theme_cls.primary_palette)
+            ),
+            blend=False,
+        )
         bg = color[self.theme_cls.theme_style.lower()]["color"]
         # self.RecordingsUI.ids.pg_bar.handle_color = [_/255 for _ in bg]
 
         # construct main string
         title = data["title"]
-        
-        self.RecordingsUI.ids.a_text.text = data['recordingSettings']['recordist']['title']
-        self.RecordingsUI.ids.t_text.text =  data["title"]
+
+        self.RecordingsUI.ids.a_text.text = data["recordingSettings"]["recordist"][
+            "title"
+        ]
+        self.RecordingsUI.ids.t_text.text = data["title"]
 
         next_frame(f, time=0.3)
         next_frame(self.open_mini_player, time=0.6)
@@ -137,7 +148,7 @@ class EarthFMApp(MDApp):
         if not image.endswith(".webp"):
             # webp not supported by kivy
             self.RecordingsUI.ids.p_img.source = image
-            Animation(opacity=1,d=0.3).start(self.RecordingsUI.ids.p_img)
+            Animation(opacity=1, d=0.3).start(self.RecordingsUI.ids.p_img)
 
     def close_mini_player(self):
         box = self.RecordingsUI.ids.small_player

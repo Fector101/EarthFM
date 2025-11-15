@@ -1,10 +1,11 @@
-from kivy.animation import Animation
-from kivy.uix.boxlayout import BoxLayout
-from kivy.lang import Builder
-from kivy.properties import NumericProperty, ColorProperty
-from kivy.metrics import dp
-from kivy.clock import Clock
 import math
+
+from kivy.animation import Animation
+from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.metrics import dp
+from kivy.properties import ColorProperty, NumericProperty
+from kivy.uix.boxlayout import BoxLayout
 
 Builder.load_string("""
 <WaveProgressIndicator>:
@@ -40,8 +41,8 @@ class WaveProgressIndicator(BoxLayout):
     _other_amplitude = NumericProperty(amplitude)
     wave_speed = -dp(30)
     wavelenght = dp(40)
-    handle_color = ColorProperty([0,0,0,0])
-    playing =  True
+    handle_color = ColorProperty([0, 0, 0, 0])
+    playing = True
 
     _time = 0
 
@@ -67,7 +68,7 @@ class WaveProgressIndicator(BoxLayout):
         ]
         self.canvas.get_group("_line")[0].points = [
             [
-                self.handle.pos[0] + self.handle.size[0]/2,
+                self.handle.pos[0] + self.handle.size[0] / 2,
                 self.y + self.height / 2,
             ],
             [self.x + self.width - dp(1), self.y + self.height / 2],
@@ -76,19 +77,22 @@ class WaveProgressIndicator(BoxLayout):
     def _render_wave(self, dt):
         self._time += dt
         points = []
-        sample_size = int(self.handle.pos[0] + self.handle.size[0]/2)
+        sample_size = int(self.handle.pos[0] + self.handle.size[0] / 2)
 
         line = self.canvas.get_group("line")[0]
 
         _h = self.y + self.height / 2 - line.width / 2
 
         if not self.playing:
-            self.canvas.get_group("line")[0].points = [[self.x+dp(1), _h],[sample_size, _h]]
+            self.canvas.get_group("line")[0].points = [
+                [self.x + dp(1), _h],
+                [sample_size, _h],
+            ]
             return
 
         # using range(0, sample_size, 2)
         # will make it more efficient and easy on cpu?
-        for pt in range(int(self.x+dp(1)), sample_size):
+        for pt in range(int(self.x + dp(1)), sample_size):
             y = (
                 self.amplitude
                 if self._other_amplitude == self.amplitude

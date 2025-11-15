@@ -1,5 +1,6 @@
 import math
 
+from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.graphics import Color, Line, Rectangle
@@ -14,19 +15,88 @@ from kivy.properties import (
 )
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import AsyncImage
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.utils import get_color_from_hex
+from kivy.uix.label import CoreLabel
 from kivymd.uix.behaviors import ScaleBehavior, StencilBehavior
 from kivymd.uix.navigationbar import MDNavigationBar, MDNavigationItem
 
-from earthfm.util import next_frame
 from earthfm.goverlay import GradientOverlay
+from earthfm.util import next_frame
 from earthfm.wi import WaveProgressIndicator
 
 
-class LongLabel(RelativeLayout):
-    pass
+class MarqueeLabel(FloatLayout):
+    overlay_color = ColorProperty()
+    spl = NumericProperty(0.2)
+    text = StringProperty(" ")
+    _text = ""
+    empty_str = "\u2003•\u2003"
+    empty_str_width = 0
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        next_frame(self._compute_separator_width)
+
+    def _compute_separator_width(self, *args):
+        temp = CoreLabel(
+            text=self.empty_str,
+            font_size=self.ids.label.font_size,
+            font_name=self.ids.label.font_name,
+        )
+        temp.refresh()
+        self.empty_str_width = temp.texture.size[0]
+
+    def on_overlay_color(self, instance, color):
+        if self._text != self.ids.label.text:
+            self.ids.overlay.color = color
+
+    # a very simple label scroll using 2 labels
+    # from x = 0 x -> label.width then shift x to label.width/2
+    # then label.width/2 - > label.width
+    # then shfit label.width/2 then continue the loop
+    def on_text(self, instance, data, fail=False):
+        if not fail:
+            self.ids.label.text = data
+            self._text = data
+        else:
+            self.ids.label.text = data + self.empty_str + data
+
+    def on_label_width(self):
+        if self.ids.label.text == self._text:
+            if self.ids.label.width > self.width:
+                self.ids.overlay.color = self.overlay_color
+                self.on_text(self, self._text, fail=True)
+            else:
+                Animation.cancel_all(self.ids.label)
+                self.ids.label.x = self.x
+                self.ids.overlay.color = [0, 0, 0, 0]
+
+        elif self._text.strip() != "":
+            self.loop_start()
+
+    def loop_start(self):
+        Animation.cancel_all(self.ids.label)
+        self.ids.label.x = self.x
+        anim = Animation(
+            x=self.x - self.ids.label.width + self.width, d=len(self._text) * self.spl
+        )
+        anim.bind(on_complete=self.loop_continue)
+        anim.start(self.ids.label)
+
+    # offset is to fix that jerk
+    def loop_continue(self, *args):
+        self.ids.label.x = (
+            self.x - (self.ids.label.width - self.empty_str_width) / 2 + self.width
+        )
+        anim = Animation(
+            x=self.x - self.ids.label.width + self.width, d=len(self._text) * self.spl
+        )
+        anim.bind(on_complete=self.loop_continue)
+        anim.start(self.ids.label)
+
 
 class RoundedImage(AsyncImage, StencilBehavior):
     pass

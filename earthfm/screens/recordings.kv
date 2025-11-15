@@ -38,36 +38,37 @@
         text_color:app.white_color
 
 
-<LongLabel>:
-    size_hint:[1, None]
-    height:dp(30)
-    text:" "
+<MarqueeLabel>:
+    size_hint:[1, 1]
+    overlay_color:app.theme_cls.surfaceContainerHighestColor
+
+    canvas.before:
+        StencilPush
+        Rectangle:
+            pos: self.pos
+            size: self.size 
+        StencilUse
+    canvas.after:
+        StencilUnUse
+        Rectangle:
+            pos: self.pos
+            size: root.size 
+        StencilPop
 
     ELabel:
-        text:root.text
+        text:" "
+        id:label
         adaptive_width:True
         font_name:app.bold_font
-        x:0
-        canvas.before:
-            StencilPush
-            Rectangle:
-                pos: self.pos
-                size: root.width,self.size[1]
-            StencilUse
-        canvas.after:
-            StencilUnUse
-            Rectangle:
-                pos: self.pos
-                size: root.width, self.size[0]
-            StencilPop
+        y:root.y + (root.height-self.height)/2
+        on_width: root.on_label_width()
 
     GradientOverlay:
-        color:app.theme_cls.surfaceContainerHighestColor
+        id:overlay
         fade_width:dp(20)
         size_hint:[1,1]
-        x:self.parent.x + (self.parent.width-self.width)/2
-        y:self.parent.y + (self.parent.height-self.height)/2
-
+        x:root.x + (root.width-self.width)/2
+        y:root.y + (root.height-self.height)/2
 
 <MoodSection>:
     max_entries:10
@@ -120,14 +121,21 @@ MDScreen:
             height:self.minimum_height
             spacing:dp(20)
             
-            ELabel:
-                text:"EarthFM"
-                font_size:"45sp"
-                font_name:app.main_font
-                theme_text_color:"Custom"
-                text_color:app.theme_cls.primaryColor
-                padding:[0, 0, 0, dp(15)]
-                adaptive_height:True
+            BoxLayout:
+                size_hint_y:None
+                height:self.minimum_height
+                ELabel:
+                    text:"EarthFM"
+                    font_size:"45sp"
+                    font_name:app.main_font
+                    theme_text_color:"Custom"
+                    text_color:app.theme_cls.primaryColor
+                    padding:[0, 0, 0, dp(15)]
+                    adaptive_height:True
+                MDSwitch:
+                    on_active:
+                        app.theme_cls.theme_style = "Dark" if self.active else "Light"
+
 
     BoxLayout:
         id:small_player
@@ -158,9 +166,8 @@ MDScreen:
 
             BoxLayout:
                 orientation: 'vertical'
-                size_hint_y:None
                 
-                LongLabel:
+                MarqueeLabel:
                     id:t_text
 
                 ELabel:
