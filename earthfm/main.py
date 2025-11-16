@@ -10,12 +10,16 @@ try:
 except Exception:
     from kivy.core.audio_output import SoundLoader
 
+from kivy.core.window import Window
 
 from kivymd.app import MDApp
 
 from materialyoucolor.hct import Hct
-from materialyoucolor.utils.color_utils import argb_from_rgba_01
+from materialyoucolor.utils.color_utils import argb_from_rgba_01, rgba_from_argb
 from materialyoucolor.utils.theme_utils import custom_color
+from materialyoucolor.utils.platform_utils import open_wallpaper_file
+from materialyoucolor.quantize import QuantizeCelebi
+from materialyoucolor.score.score import Score
 
 from earthfm.api import EarthFMBackend
 from earthfm.thread import EarthFMThreadExecutor
@@ -126,8 +130,12 @@ class EarthFMApp(MDApp):
         for widget in widgets:
             next_frame(anim.start, widget, time=1)
 
+    def set_window_color(self, color):
+        Window.clearcolor = color
+    
     def on_start(self):
         self.RecordingsUI.ids.indicator.start()
+        self.PlayerUI.ids.windicator.on_seek = self.seek_music
         self.thread.submit(self.fetch_recordings)
         Clock.schedule_interval(self.update_sound, 0.1)
         # Clock.schedule_interval(self._print_fps, 0.5)
@@ -135,15 +143,30 @@ class EarthFMApp(MDApp):
     def _print_fps(self, *largs):
         print("FPS: %2.4f (real draw: %d)" % (Clock.get_fps(), Clock.get_rfps()))
 
+    def get_dominant_color(self, image):
+        image = open_wallpaper_file(image)
+        pixel_len = image.width * image.height
+        image_data = image.getdata()
+        pixel_array = [
+            image_data[_]
+            for _ in range(
+                0, pixel_len, 5
+            )
+        ]
+        colors = QuantizeCelebi(pixel_array, 128)
+        selected_color = Score.score(colors)[0]
+        return selected_color    
 
-    #####
-
+    def seek_music(self):
+        if self._current_sound is not None and self._current_sound.state == "play":
+            self._current_sound.seek(self.PlayerUI.ids.windicator.progress * self._current_sound.length)
 
     def set_player_image(self, data, image):
         if not image.endswith(".webp"):
             # webp not supported by kivy
             self.RecordingsUI.ids.p_img.source = image
             Animation(opacity=1, d=0.3).start(self.RecordingsUI.ids.p_img)
+            self.theme_cls.primary_palette = [_/255 for _ in rgba_from_argb(self.get_dominant_color(image))]
 
     _current_sound = None
     def on_currently_playing(self, instance, data):
@@ -178,12 +201,15 @@ class EarthFMApp(MDApp):
         # get music and load into soundloader object
         self.thread.submit(self.backend.get_sound, data, self.play_sound)
 
+
+
     def update_sound(self, *args):
         if self._current_sound is not None:
             self.RecordingsUI.ids.play_btn.icon = "play" if self._current_sound.state == 'stop' else "pause" 
             self.RecordingsUI.ids.pg_indicator.value = (self._current_sound.get_pos() / self._current_sound.length) * 100
-
-            self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
+            self.PlayerUI.ids.lenght.lenght = int(self._current_sound.length)
+            if not self.PlayerUI.ids.windicator._touch_held:
+                self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
 
     def pause_play_icon(self, widget):
         if self._current_sound is not None:

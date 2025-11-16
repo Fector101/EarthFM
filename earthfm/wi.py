@@ -43,6 +43,7 @@ class WaveProgressIndicator(BoxLayout):
     wavelenght = dp(40)
     handle_color = ColorProperty([0, 0, 0, 0])
     playing = True
+    on_seek = lambda *args : None
 
     _time = 0
 
@@ -119,8 +120,10 @@ class WaveProgressIndicator(BoxLayout):
             bar_ry <= touch_y <= bar_ry + bar_rh
         )
 
+    _touch_held = False
     def on_touch_down(self, touch):
         if self.collide_bar(*touch.pos):
+            self._touch_held = True
             touch.ud["moving_handle"] = self
             Animation.cancel_all(self)
             Animation(_other_amplitude=0, t="easing_standard", d=0.3).start(self)
@@ -135,6 +138,8 @@ class WaveProgressIndicator(BoxLayout):
             Animation(
                 _other_amplitude=self.amplitude, t="easing_standard", d=0.3
             ).start(self)
+            Clock.schedule_once(lambda *arg: setattr(self, "_touch_held", False), 0.2)
+            self.on_seek()
             return True
         return super().on_touch_up(touch)
 

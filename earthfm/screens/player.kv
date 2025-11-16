@@ -1,21 +1,79 @@
 MDScreen:
     name:"player"
     md_bg_color:app.theme_cls.surfaceContainerHighestColor
+    on_enter:app.set_window_color(self.md_bg_color)
 
     MDIconButton:
         icon:"chevron-down"
         on_release:
             if self.opacity > 0 :  app.screen_manager.switch_to(app.RecordingsUI)
-            if self.opacity > 0 :  app.next_frame(app.RecordingsUI.ids.btm_player.contract, time=0.3)
+            if self.opacity > 0 :  app.next_frame(app.RecordingsUI.ids.btm_player.contract, time=0.4)
         size_hint:[None, None]
         size:[dp(50)] * 2
         x:root.width - self.width - dp(10)
         y:root.height - self.height - dp(10)
+    
 
-    WaveProgressIndicator:
-        id:windicator
-        size_hint_x:0.7
+    RoundedImage:
+        source:app.RecordingsUI.ids.p_img.source
+        size_hint:[None, None]
+        size:[dp(200)]*2
+        radius:[dp(30)]*4
+        y:plr.y+plr.height+dp(20)
+        pos_hint:{"center_x":0.5}
+
+    BoxLayout:
+        id:plr
+        size_hint_x:0.9
         size_hint_y:None
         height:dp(50)
-        pos_hint:{"center_x":0.5, "center_y":0.5}
-        handle_color:app.theme_cls.primaryColor
+        spacing:dp(10)
+        pos_hint: {"center_x":0.5, "center_y":0.5}
+        
+        ELabel:
+            id:cur_sec
+            text:" "
+            font_name:app.medium_font
+            font_size:"16sp"
+            size_hint_x:None
+            width:dp(80)
+            halign:"center"
+    
+        WaveProgressIndicator:
+            id:windicator
+            handle_color:app.theme_cls.primaryColor
+            on_progress:
+                cur_sec.text = app.backend.second_to_duration(int(lenght.lenght * self.progress))
+
+        ELabel:
+            id:lenght
+            lenght:60*60
+            on_lenght:
+                self.text = app.backend.second_to_duration(self.lenght)
+            text:" "
+            font_name:app.medium_font
+            font_size:"16sp"
+            size_hint_x:None
+            width:dp(80)
+            halign:"center"
+
+    ELabel:
+        id:title
+        text:app.RecordingsUI.ids.t_text.text
+        font_name:app.bold_font
+        font_size:"22sp"
+        halign:"center"
+        adaptive_height:True
+        y:plr.y - self.height - dp(20)
+        pos_hint:{"center_x":0.5}
+
+
+    ELabel:
+        text:app.RecordingsUI.ids.a_text.text
+        font_name:app.medium_font
+        font_size:"16sp"
+        halign:"center"
+        adaptive_height:True
+        y:title.y - self.height - dp(10)
+        pos_hint:{"center_x":0.5}
+

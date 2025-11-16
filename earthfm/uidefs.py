@@ -13,6 +13,7 @@ from kivy.properties import (
     NumericProperty,
     StringProperty,
 )
+from kivy.uix.widget import Widget
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -20,10 +21,12 @@ from kivy.uix.image import AsyncImage
 from kivy.uix.label import CoreLabel
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.utils import get_color_from_hex
+from kivy.uix.screenmanager import FadeTransition
 
 from kivymd.uix.behaviors import ScaleBehavior, StencilBehavior
 from kivymd.uix.navigationbar import MDNavigationBar, MDNavigationItem
 from kivymd.uix.transition.transition import MDTransitionBase
+from kivymd.uix.label import MDLabel
 
 from earthfm.goverlay import GradientOverlay
 from earthfm.util import next_frame
@@ -163,12 +166,18 @@ class BottomPlayer(ButtonBehavior, BoxLayout):
         )
 
 
-class MDFadeTransition(MDTransitionBase):
+class MDFadeTransition(FadeTransition, MDTransitionBase):
     pass
 
 
-class RoundedImage(AsyncImage, StencilBehavior):
+
+class ELabel(MDLabel):
     pass
+
+class RoundedImage(Widget):
+    
+    source = StringProperty("./assets/transparent.png")
+    radius = ListProperty([0,0,0,0])
 
 
 class BaseMDNavigationItem(MDNavigationItem):
