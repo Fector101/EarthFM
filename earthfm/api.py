@@ -11,7 +11,7 @@ from earthfm.util import next_frame
 class EarthFMBackend:
     base_url = "https://earth.fm/"
     cache_dir = ".cache"
-    sound_dir = "/home/tdynamos/Drive/EarthFM sounds/"
+    sound_dir = "sounds"
     session = None
 
     def __init__(self):

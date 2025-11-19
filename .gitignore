@@ -1,3 +1,6 @@
 .ruff_cache
 .cache
 __pycache__
+.buildozer
+bin
+test.mp3

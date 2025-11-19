@@ -5,18 +5,12 @@ from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.loader import Loader
 
-try:
-    from kivy.core.audio import SoundLoader
-except Exception:
-    from kivy.core.audio_output import SoundLoader
-
 from kivy.core.window import Window
 
 from kivymd.app import MDApp
 
 from materialyoucolor.hct import Hct
 from materialyoucolor.utils.color_utils import argb_from_rgba_01, rgba_from_argb
-from materialyoucolor.utils.theme_utils import custom_color
 from materialyoucolor.utils.platform_utils import open_wallpaper_file
 from materialyoucolor.quantize import QuantizeCelebi
 from materialyoucolor.score.score import Score
@@ -26,6 +20,15 @@ from earthfm.thread import EarthFMThreadExecutor
 from earthfm.uidefs import *
 from earthfm.util import next_frame
 
+
+is_android = "ANDROID_ENTRYPOINT" in os.environ.keys()
+
+if is_android:
+    from earthfm.asound import AndroidMediaPlayer
+    Player = AndroidMediaPlayer
+else:
+    from earthfm.sound import DesktopMediaPlayer
+    Player = DesktopMediaPlayer
 
 class EarthFMApp(MDApp):
     
@@ -52,6 +55,12 @@ class EarthFMApp(MDApp):
 
     thread = EarthFMThreadExecutor()
     backend = EarthFMBackend()
+    backend.cache_dir = get_file(None, backend.cache_dir)
+    backend.sound_dir = get_file(None, backend.sound_dir)
+
+    if not is_android:
+        player : DesktopMediaPlayer = None
+    
 
     # root ui
     rootui = None
@@ -61,8 +70,11 @@ class EarthFMApp(MDApp):
     RecordingsUI = None
 
     def build(self):
-        # theme
 
+        # load player
+        self.player = Player()
+
+        # theme
         self.theme_cls.primary_palette = "#025A4D"
         # original color
         # "#025A4D"
@@ -158,17 +170,20 @@ class EarthFMApp(MDApp):
         return selected_color    
 
     def seek_music(self):
-        if self._current_sound is not None and self._current_sound.state == "play":
-            self._current_sound.seek(self.PlayerUI.ids.windicator.progress * self._current_sound.length)
+        if self.player.state in ["playing" or "paused"]:
+            self.player.seek(self.PlayerUI.ids.windicator.progress * self.player.length)
 
     def set_player_image(self, data, image):
         if not image.endswith(".webp"):
             # webp not supported by kivy
             self.RecordingsUI.ids.p_img.source = image
             Animation(opacity=1, d=0.3).start(self.RecordingsUI.ids.p_img)
-            self.theme_cls.primary_palette = [_/255 for _ in rgba_from_argb(self.get_dominant_color(image))]
+            self.set_theme_from_image(image)
 
-    _current_sound = None
+    def set_theme_from_image(self, image):
+        color = [_/255 for _ in rgba_from_argb(self.get_dominant_color(image))]
+        next_frame(setattr, self.theme_cls, "primary_palette", color)
+
     def on_currently_playing(self, instance, data):
         
         # stop if already playing
@@ -201,38 +216,38 @@ class EarthFMApp(MDApp):
         # get music and load into soundloader object
         self.thread.submit(self.backend.get_sound, data, self.play_sound)
 
-
-
     def update_sound(self, *args):
-        if self._current_sound is not None:
-            self.RecordingsUI.ids.play_btn.icon = "play" if self._current_sound.state == 'stop' else "pause" 
-            self.RecordingsUI.ids.pg_indicator.value = (self._current_sound.get_pos() / self._current_sound.length) * 100
-            self.PlayerUI.ids.lenght.lenght = int(self._current_sound.length)
-            if not self.PlayerUI.ids.windicator._touch_held:
-                self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
+        if not self.player.state in ["playing" or "paused"]:
+            return
+        
+        self.RecordingsUI.ids.play_btn.icon = "play" if self.player.state == 'paused' else "pause" 
+        self.RecordingsUI.ids.pg_indicator.value = (self.player.get_pos() / self.player.length) * 100
+        self.PlayerUI.ids.lenght.lenght = int(self.player.length)
+
+        if not self.PlayerUI.ids.windicator._touch_held:
+            self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
 
     def pause_play_icon(self, widget):
-        if self._current_sound is not None:
+        if self.player.state in ["playing" or "paused"]:
             if widget.icon == "play":
-                seek_value = (self.RecordingsUI.ids.pg_indicator.value/100) * self._current_sound.length
-                self._current_sound.play()
-                next_frame(self._current_sound.seek, seek_value)
+                seek_value = (self.RecordingsUI.ids.pg_indicator.value/100) * self.player.length
+                self.player.play()
+                next_frame(self.player.seek, seek_value)
             else:
-                self._current_sound.stop()
+                self.player.stop()
 
     def stop_sound(self):
-        if self._current_sound is not None:
-            self._current_sound.stop()
-            self._current_sound.unload()
-            self._current_sound = None
+        self.player.unload()
 
     def play_sound(self, file, data):
         if data is self.currently_playing:
+            self.player.load(self.get_file(file))
+            self.player.on_load = self.on_load
             
-            self._current_sound = SoundLoader().load(file)
-            self._current_sound.play()
-            self.RecordingsUI.ids.pg_indicator.stop()
-            self.RecordingsUI.ids.pg_indicator.value = 0
+    def on_load(self):
+        self.player.play()
+        self.RecordingsUI.ids.pg_indicator.stop()
+        self.RecordingsUI.ids.pg_indicator.value = 0
 
     # color = custom_color(
     #     argb_from_rgba_01(
