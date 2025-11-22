@@ -125,9 +125,11 @@ MDScreen:
         shape_size:dp(100)
     
     MDScrollView:
-        
+        id:scrl
         do_scroll_y:True
         do_scroll_x:False
+        size_hint_y:None
+        pos_hint:{"bottom":1}
 
         BoxLayout:
             id:container
@@ -167,7 +169,8 @@ MDScreen:
         pos_hint:{"center_x":0.5}
         y:-self.height-dp(10)
         size_hint_y:None
-        height:dp(80)
+        _pad:0
+        height:dp(80)+self._pad
         spacing: dp(15)
         padding: [dp(10), dp(10), dp(10), 0]
         orientation:'vertical'

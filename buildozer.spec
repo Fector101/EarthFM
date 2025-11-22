@@ -43,18 +43,19 @@ version = 1
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
 
-requirements = python3,
-    kivy==master,
-    materialyoucolor,
-    materialshapes,
-    exceptiongroup,
-    asyncgui,
-    asynckivy,
-    android,
-    pillow,
-    pycairo,
-    kivymd
-    # https://github.com/kivymd/KivyMD/archive/master.zip
+requirements = python3, kivy==master, numpy, openai
+    # kivy==master,
+    # materialyoucolor,
+    # materialshapes,
+    # exceptiongroup,
+    # asyncgui,
+    # asynckivy,
+    # android,
+    # pillow,
+    # pycairo,
+    # scipy,
+    # ffmpeg,
+    # https://github.com/kivymd/KivyMD/archive/master.zip,
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -67,7 +68,7 @@ requirements = python3,
 #icon.filename = %(source.dir)s/data/icon.png
 
 # (bool) Indicate if the application should be fullscreen or not
-#fullscreen = False
+fullscreen = False
 
 #android.aars = 
 
@@ -101,15 +102,15 @@ requirements = python3,
 
 #android.add_resources = 
 
-#android.add_src = 
+android.add_src = java
 
-#android.api = 35
+android.api = 36
 
 #android.ant_path = 
 
 #android.apptheme = @android:style/Theme.NoTitleBar
 
-android.archs = arm64-v8a
+android.archs = arm64-v8a, armeabi_v7a
 
 #android.allow_backup = True
 
@@ -131,8 +132,6 @@ android.archs = arm64-v8a
 
 #android.extra_manifest_xml = ./src/android/extra_manifest.xml
 
-#android.features = android.hardware.usb.host
-
 #android.gradle_dependencies = 
 
 #android.home_app = False
@@ -153,7 +152,7 @@ android.archs = arm64-v8a
 
 #android.meta_data = 
 
-#android.minapi = 24
+android.minapi = 24
 
 #android.ndk = 25b
 
@@ -169,7 +168,11 @@ android.no-byte-compile-python = True
 
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
-android.permissions = android.permission.INTERNET 
+android.permissions = android.permission.INTERNET,
+                        android.permission.BLUETOOTH_CONNECT,
+                        android.permission.BLUETOOTH_ADVERTISE, 
+                        android.permission.BLUETOOTH_SCAN,
+                        android.permission.BLUETOOTH,
 # , (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
 
 #android.presplash_color = #FFFFFF
@@ -208,7 +211,7 @@ p4a.bootstrap = sdl3
 
 #p4a.commit = HEAD
 
-#p4a.extra_args = 
+p4a.extra_args =  --extra-index-url https://anshdadwal.is-a.dev/p4a-wheels/p4a/ --extra-index-url https://chaquo.com/pypi-13.1/  --use-prebuilt-version-for kivy
 
 #p4a.fork = kivy
 
@@ -220,7 +223,7 @@ p4a.bootstrap = sdl3
 
 #p4a.setup_py = False
 
-#p4a.source_dir = 
+p4a.source_dir = /home/tdynamos/git/python-for-android/
 
 #p4a.url = 
 

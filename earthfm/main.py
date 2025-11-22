@@ -11,8 +11,7 @@ from kivymd.app import MDApp
 
 from materialyoucolor.hct import Hct
 from materialyoucolor.utils.color_utils import argb_from_rgba_01, rgba_from_argb
-from materialyoucolor.utils.platform_utils import open_wallpaper_file
-from materialyoucolor.quantize import QuantizeCelebi
+from materialyoucolor.quantize import ImageQuantizeCelebi
 from materialyoucolor.score.score import Score
 
 from earthfm.api import EarthFMBackend
@@ -25,16 +24,54 @@ is_android = "ANDROID_ENTRYPOINT" in os.environ.keys()
 
 if is_android:
     from earthfm.asound import AndroidMediaPlayer
+
     Player = AndroidMediaPlayer
 else:
     from earthfm.sound import DesktopMediaPlayer
+
     Player = DesktopMediaPlayer
 
+
+def get_window_insets():
+
+    if not is_android:
+        return [0] * 4
+
+    from jnius import PythonJavaClass, autoclass
+    from android import mActivity
+
+    try:
+        window = mActivity.getWindow()
+        decorView = window.getDecorView()
+
+        metrics = mActivity.getResources().getDisplayMetrics()
+        density = float(metrics.density) if metrics else 1.0
+
+        insets = None
+        try:
+            insets = decorView.getRootWindowInsets()
+        except Exception:
+            insets = None
+
+        if insets:
+            try:
+                left = int(insets.getSystemWindowInsetLeft() or 0)
+                top = int(insets.getSystemWindowInsetTop() or 0)
+                right = int(insets.getSystemWindowInsetRight() or 0)
+                bottom = int(insets.getSystemWindowInsetBottom() or 0)
+            except Exception:
+                left = top = right = bottom = 0
+        else:
+            left = top = right = bottom = 0
+        return (left, top, right, bottom)
+    except Exception as e:
+        return (0, 0, 0, 0)
+
+
 class EarthFMApp(MDApp):
-    
+
     # for kv files
     next_frame = lambda self, *arg, **kwargs: next_frame(*arg, **kwargs)
-    
 
     currently_playing = DictProperty({})
 
@@ -55,12 +92,15 @@ class EarthFMApp(MDApp):
 
     thread = EarthFMThreadExecutor()
     backend = EarthFMBackend()
+
     backend.cache_dir = get_file(None, backend.cache_dir)
     backend.sound_dir = get_file(None, backend.sound_dir)
 
+    if os.uname().nodename == "Iphone14pro":
+        backend.sound_dir = "/home/tdynamos/Drive/EarthFM sounds/"
+
     if not is_android:
-        player : DesktopMediaPlayer = None
-    
+        player: DesktopMediaPlayer = None
 
     # root ui
     rootui = None
@@ -103,8 +143,23 @@ class EarthFMApp(MDApp):
 
         self.PlayerUI = Builder.load_file(os.path.join(screen_dir, "player.kv"))
         self.screen_manager.add_widget(self.PlayerUI)
+        self.set_screen_paddings()
 
         return self.rootui
+
+    def set_screen_paddings(self):
+        left, top, right, bottom = get_window_insets()
+        self.RecordingsUI.ids.container.padding = [
+            dp(10) + left,
+            dp(10),
+            dp(10) + right,
+            dp(10),
+        ]
+        self.RecordingsUI.ids.scrl.height = Window.height - top
+        self.RecordingsUI.ids.btm_player._pad = bottom
+        self.RecordingsUI.ids.btm_player.padding[3] += bottom
+        self.RecordingsUI.ids.btm_player.padding[0] += left
+        self.RecordingsUI.ids.btm_player.padding[2] += right
 
     def fetch_recordings(self):
         data = self.backend.recordings
@@ -144,7 +199,7 @@ class EarthFMApp(MDApp):
 
     def set_window_color(self, color):
         Window.clearcolor = color
-    
+
     def on_start(self):
         self.RecordingsUI.ids.indicator.start()
         self.PlayerUI.ids.windicator.on_seek = self.seek_music
@@ -156,21 +211,12 @@ class EarthFMApp(MDApp):
         print("FPS: %2.4f (real draw: %d)" % (Clock.get_fps(), Clock.get_rfps()))
 
     def get_dominant_color(self, image):
-        image = open_wallpaper_file(image)
-        pixel_len = image.width * image.height
-        image_data = image.getdata()
-        pixel_array = [
-            image_data[_]
-            for _ in range(
-                0, pixel_len, 5
-            )
-        ]
-        colors = QuantizeCelebi(pixel_array, 128)
+        colors = ImageQuantizeCelebi(image, 2, 128)
         selected_color = Score.score(colors)[0]
-        return selected_color    
+        return selected_color
 
     def seek_music(self):
-        if self.player.state in ["playing" or "paused"]:
+        if self.player.state in ["playing", "paused"]:
             self.player.seek(self.PlayerUI.ids.windicator.progress * self.player.length)
 
     def set_player_image(self, data, image):
@@ -181,11 +227,11 @@ class EarthFMApp(MDApp):
             self.set_theme_from_image(image)
 
     def set_theme_from_image(self, image):
-        color = [_/255 for _ in rgba_from_argb(self.get_dominant_color(image))]
+        color = [_ / 255 for _ in rgba_from_argb(self.get_dominant_color(image))]
         next_frame(setattr, self.theme_cls, "primary_palette", color)
 
     def on_currently_playing(self, instance, data):
-        
+
         # stop if already playing
         self.stop_sound()
 
@@ -195,7 +241,7 @@ class EarthFMApp(MDApp):
             self.backend.get_image, data, self.set_player_image, 1
         )
         next_frame(f, time=0.3)
-        
+
         # set title and artist
         self.RecordingsUI.ids.a_text.text = data["recordingSettings"]["recordist"][
             "title"
@@ -206,31 +252,42 @@ class EarthFMApp(MDApp):
         if not self.RecordingsUI.ids.btm_player.is_open:
             next_frame(self.RecordingsUI.ids.btm_player.open, time=0.6)
 
-        
         # set music for loading
-        
+
         self.RecordingsUI.ids.pg_indicator.type = "indeterminate"
         self.RecordingsUI.ids.pg_indicator.value = 100
         self.RecordingsUI.ids.pg_indicator.start()
-        
+
         # get music and load into soundloader object
         self.thread.submit(self.backend.get_sound, data, self.play_sound)
 
     def update_sound(self, *args):
-        if not self.player.state in ["playing" or "paused"]:
+        if not self.player.state in ["playing", "paused"]:
             return
-        
-        self.RecordingsUI.ids.play_btn.icon = "play" if self.player.state == 'paused' else "pause" 
-        self.RecordingsUI.ids.pg_indicator.value = (self.player.get_pos() / self.player.length) * 100
-        self.PlayerUI.ids.lenght.lenght = int(self.player.length)
+
+        self.RecordingsUI.ids.play_btn.icon = (
+            "play" if self.player.state == "paused" else "pause"
+        )
+        length = self.player.length
+        self.PlayerUI.ids.lenght.lenght = int(length)
+        if length > 0:
+            self.RecordingsUI.ids.pg_indicator.value = (
+                self.player.get_pos() / length
+            ) * 100
+        else:
+            self.RecordingsUI.ids.pg_indicator.value = 0
 
         if not self.PlayerUI.ids.windicator._touch_held:
-            self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
+            self.PlayerUI.ids.windicator.progress = (
+                self.RecordingsUI.ids.pg_indicator.value / 100
+            )
 
     def pause_play_icon(self, widget):
         if self.player.state in ["playing", "paused"]:
             if widget.icon == "play":
-                seek_value = (self.RecordingsUI.ids.pg_indicator.value/100) * self.player.length
+                seek_value = (
+                    self.RecordingsUI.ids.pg_indicator.value / 100
+                ) * self.player.length
                 self.player.play()
                 next_frame(self.player.seek, seek_value)
                 widget.icon = "pause"
@@ -245,7 +302,7 @@ class EarthFMApp(MDApp):
         if data is self.currently_playing:
             self.player.load(self.get_file(file))
             self.player.on_load = self.on_load
-            
+
     def on_load(self):
         self.player.play()
         self.RecordingsUI.ids.pg_indicator.stop()

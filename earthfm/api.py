@@ -176,28 +176,51 @@ class EarthFMBackend:
 
         sound = data["recordingSettings"]["audioUrl"]
 
-        sound_file = os.path.join(self.sound_dir,  os.path.basename(sound))
+        sound_file = os.path.join(self.sound_dir, os.path.basename(sound))
+        temp_sound = sound_file + ".dl"
 
         if not os.path.isdir(self.sound_dir):
             os.makedirs(self.sound_dir)
 
-        if exists(sound_file)   :
-            next_frame(on_complete, sound_file, data)
-            return
-
+        if exists(sound_file):
+            if self._is_valid_mp3(sound_file):
+                next_frame(on_complete, sound_file, data)
+                return
+            os.remove(sound_file)
 
         if not exists(sound_file):
-            # download it
             self.downloaders += 1
-            with open(sound_file, "wb") as file_ctx:
-                try:
+            try:
+                with open(temp_sound, "wb") as file_ctx:
                     file_ctx.write(
                         self.session.get(sound).content
                     )
-                except Exception as e:
+                if not self._is_valid_mp3(temp_sound):
+                    raise ValueError("downloaded file is not a valid mp3")
+                os.replace(temp_sound, sound_file)
+            except Exception:
+                if exists(temp_sound):
+                    os.remove(temp_sound)
+                if exists(sound_file):
                     os.remove(sound_file)
-                    self.downloaders -= 1
-                    raise e
+                self.downloaders -= 1
+                raise
             self.downloaders -= 1
-        
+
         next_frame(on_complete, sound_file, data)
+
+    def _is_valid_mp3(self, path):
+        try:
+            size = getsize(path)
+            if size < 512:
+                return False
+            with open(path, "rb") as f:
+                header = f.read(3)
+                if header.startswith(b"ID3"):
+                    return True
+                if len(header) < 2:
+                    return False
+                b0, b1 = header[0], header[1]
+                return b0 == 0xFF and (b1 & 0xE0) == 0xE0
+        except OSError:
+            return False
