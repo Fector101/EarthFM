@@ -65,7 +65,7 @@ class AndroidMediaPlayer:
 
     @run_on_ui_thread
     def pause(self):
-        if self._pla/yer and self._player.isPlaying():
+        if self._player and self._player.isPlaying():
             self._player.pause()
             self._state = "paused"
     

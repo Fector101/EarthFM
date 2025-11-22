@@ -228,13 +228,15 @@ class EarthFMApp(MDApp):
             self.PlayerUI.ids.windicator.progress = self.RecordingsUI.ids.pg_indicator.value/100
 
     def pause_play_icon(self, widget):
-        if self.player.state in ["playing" or "paused"]:
+        if self.player.state in ["playing", "paused"]:
             if widget.icon == "play":
                 seek_value = (self.RecordingsUI.ids.pg_indicator.value/100) * self.player.length
                 self.player.play()
                 next_frame(self.player.seek, seek_value)
+                widget.icon = "pause"
             else:
-                self.player.stop()
+                widget.icon = "play"
+                self.player.pause()
 
     def stop_sound(self):
         self.player.unload()
