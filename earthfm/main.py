@@ -4,6 +4,7 @@ from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.loader import Loader
+from kivy.properties import BooleanProperty
 
 from kivy.core.window import Window
 
@@ -74,6 +75,7 @@ class EarthFMApp(MDApp):
     next_frame = lambda self, *arg, **kwargs: next_frame(*arg, **kwargs)
 
     currently_playing = DictProperty({})
+    loop_enabled = BooleanProperty(False)
 
     white_color = get_color_from_hex("#E9EFEC")
     get_file = lambda self, file_name: os.path.join(
@@ -149,6 +151,7 @@ class EarthFMApp(MDApp):
 
     def set_screen_paddings(self):
         left, top, right, bottom = get_window_insets()
+        top = 0
         self.RecordingsUI.ids.container.padding = [
             dp(10) + left,
             dp(10),
@@ -186,6 +189,12 @@ class EarthFMApp(MDApp):
             widgets.append(widget)
             box.add_widget(widget)
 
+        widget = MoodSection()
+        widget.mood = ""
+        widget.opacity = 0
+        widget.height= dp(80)
+        box.add_widget(widget)
+
         next_frame(self.show_widgets, widgets, time=0.5)
 
     def show_widgets(self, widgets):
@@ -201,6 +210,7 @@ class EarthFMApp(MDApp):
         Window.clearcolor = color
 
     def on_start(self):
+        Window.size = [400, 750]
         self.RecordingsUI.ids.indicator.start()
         self.PlayerUI.ids.windicator.on_seek = self.seek_music
         self.thread.submit(self.fetch_recordings)
@@ -254,9 +264,8 @@ class EarthFMApp(MDApp):
 
         # set music for loading
 
-        self.RecordingsUI.ids.pg_indicator.type = "indeterminate"
-        self.RecordingsUI.ids.pg_indicator.value = 100
-        self.RecordingsUI.ids.pg_indicator.start()
+        self.RecordingsUI.ids.pg_indicator.indeterminate_animator = "discontinuous"
+        self.RecordingsUI.ids.pg_indicator.determinate = False
 
         # get music and load into soundloader object
         self.thread.submit(self.backend.get_sound, data, self.play_sound)
@@ -302,11 +311,26 @@ class EarthFMApp(MDApp):
         if data is self.currently_playing:
             self.player.load(self.get_file(file))
             self.player.on_load = self.on_load
+            self.apply_loop_setting()
 
     def on_load(self):
         self.player.play()
-        self.RecordingsUI.ids.pg_indicator.stop()
+        # self.RecordingsUI.ids.pg_indicator.stop()
+        self.RecordingsUI.ids.pg_indicator.determinate = True
         self.RecordingsUI.ids.pg_indicator.value = 0
+
+    def toggle_loop(self):
+        self.loop_enabled = not self.loop_enabled
+        self.apply_loop_setting()
+
+    def apply_loop_setting(self):
+        player = getattr(self, "player", None)
+        if not player:
+            return
+        if self.loop_enabled:
+            player.loopon()
+        else:
+            player.loopoff()
 
     # color = custom_color(
     #     argb_from_rgba_01(

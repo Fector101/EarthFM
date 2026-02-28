@@ -145,7 +145,7 @@ class BottomPlayer(ButtonBehavior, BoxLayout):
 
     def contract(self):
         Animation(
-            height=dp(80)+self._pad,
+            height=dp(120)+self._pad,
             y=0,
             d=0.3,
             radius=[dp(20), dp(20), 0, 0] * 4,

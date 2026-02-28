@@ -55,7 +55,6 @@
 
 <MarqueeLabel>:
     size_hint:[1, 1]
-    overlay_color:app.theme_cls.surfaceContainerHighestColor
 
     canvas.before:
         StencilPush
@@ -101,7 +100,7 @@
         text_color:app.theme_cls.primaryColor
         adaptive_height:True
 
-    MDRecycleView:
+    RecycleView:
         data:root.data
         key_viewclass: 'viewclass'
         do_scroll_y: False
@@ -118,7 +117,7 @@
 
 MDScreen:
     name:"recordings"
-    on_enter:app.set_window_color(self.theme_cls.surfaceContainerColor)
+    on_enter:app.set_window_color(self.theme_cls.surfaceContainerLowestColor)
 
     MDLoadingIndicator:
         id:indicator
@@ -128,7 +127,7 @@ MDScreen:
         id:scrl
         do_scroll_y:True
         do_scroll_x:False
-        size_hint_y:None
+        size_hint_y:1
         pos_hint:{"bottom":1}
 
         BoxLayout:
@@ -170,7 +169,7 @@ MDScreen:
         y:-self.height-dp(10)
         size_hint_y:None
         _pad:0
-        height:dp(80)+self._pad
+        height:dp(120)+self._pad
         spacing: dp(15)
         padding: [dp(10), dp(10), dp(10), 0]
         orientation:'vertical'
@@ -179,16 +178,16 @@ MDScreen:
 
         canvas:
             Color:
-                rgba:app.theme_cls.surfaceContainerHighestColor
+                rgba:app.theme_cls.surfaceContainerColor
             RoundedRectangle:
                 group:"bg_rect"
                 size:self.size
                 pos:self.pos
                 radius:btm_player.radius
-        
+
         BoxLayout:
             spacing:dp(10)
-            
+
             RoundedImage:
                 id:p_img
                 size_hint_x:None
@@ -197,8 +196,9 @@ MDScreen:
 
             BoxLayout:
                 orientation: 'vertical'
-                
+
                 MarqueeLabel:
+                    overlay_color:app.theme_cls.surfaceContainerColor
                     id:t_text
 
                 ELabel:
@@ -208,14 +208,37 @@ MDScreen:
                     font_size:"14sp"
                     adaptive_height:True
 
-            MDIconButton:
-                id:play_btn
-                icon: "play"
-                style: "filled"
-                on_release:app.pause_play_icon(self)
+            BoxLayout:
+                size_hint_x:None
+                width:dp(90)
+                spacing:dp(8)
 
-        MDLinearProgressIndicator:
+                MDIconButton:
+                    id:loop_btn
+                    icon: "repeat"
+                    style: "filled"
+                    size_hint:[None, None]
+                    size:[dp(40)]*2
+                    md_bg_color:
+                        app.theme_cls.primaryColor if app.loop_enabled else [0,0,0,0]
+                    icon_color:
+                        app.white_color if app.loop_enabled else app.theme_cls.primaryColor
+                    on_release:app.toggle_loop()
+
+                MDIconButton:
+                    id:play_btn
+                    icon: "play"
+                    style: "filled"
+                    size_hint:[None, None]
+                    size:[dp(40)]*2
+                    on_release:app.pause_play_icon(self)
+
+        MDExLinearProgressIndicator:
             id:pg_indicator
+            wave_length:dp(40)
+            amplitude:dp(3)
+            # track_color:app.theme_cls.secondaryContainerColor
+
+        Widget:
             size_hint_y:None
-            height:dp(5)
-            track_color:app.theme_cls.secondaryContainerColor
+            height:dp(3)
