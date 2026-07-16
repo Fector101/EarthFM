@@ -30,3 +30,10 @@ This is my recreation using Kivy/KivyMD.
 A continuously scrolling (marquee) text widget with fade at edges.
 
 <img src="https://github.com/user-attachments/assets/cf392d16-15e3-4f7b-89fe-1aff65b64636" width="320"/>
+
+## Running
+
+```sh
+pip install -r requirements.txt
+python3 -m earthfm.main
+```

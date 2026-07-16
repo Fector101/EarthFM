@@ -1,0 +1,4 @@
+kivy
+https://github.com/kivymd/KivyMD/archive/master.zip
+materialyoucolor>=3.0.3
+requests

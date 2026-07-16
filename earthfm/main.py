@@ -28,9 +28,9 @@ if is_android:
 
     Player = AndroidMediaPlayer
 else:
-    from earthfm.sound import DesktopMediaPlayer
+    from earthfm.sound import KivySoundPlayer
 
-    Player = DesktopMediaPlayer
+    Player = KivySoundPlayer
 
 
 def get_window_insets():
@@ -102,7 +102,7 @@ class EarthFMApp(MDApp):
         backend.sound_dir = "/home/tdynamos/Drive/EarthFM sounds/"
 
     if not is_android:
-        player: DesktopMediaPlayer = None
+        player: KivySoundPlayer = None
 
     # root ui
     rootui = None
