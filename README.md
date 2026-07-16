@@ -6,7 +6,9 @@
 > No media is stored or redistributed by this app; it only accesses publicly available resources from the official earth.fm website for personal, non-commercial use.
 > This project is purely for educational and hobby purposes.
 
-[WIP] EarthFM app for desktop/mobile (offline)
+An experimental EarthFM frontend written in Kivy. 
+This repository contains several custom-built Kivy widgets, layouts, and UI utilities that can be reused in other applications.
+The project is no longer under active development but is available for reference and reuse.
 
 ## Screenshots
 
