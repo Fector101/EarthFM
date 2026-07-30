@@ -240,7 +240,7 @@ p4a.bootstrap = sdl3
 
 #p4a.setup_py = False
 
-p4a.source_dir = /home/tdynamos/git/python-for-android/
+#p4a.source_dir = /home/tdynamos/git/python-for-android/
 
 #p4a.url = 
 
