@@ -223,14 +223,14 @@ android.permissions = android.permission.INTERNET,
 
 orientation = portrait
 
-p4a.branch = develop
+p4a.branch = fix/venv-clear-and-no-pip-upgrade
 
 p4a.bootstrap = sdl3
 
 #p4a.commit = HEAD
 
 
-#p4a.fork = kivy
+p4a.fork = Fector101
 
 #p4a.hook = 
 
