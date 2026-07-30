@@ -43,7 +43,7 @@ version = 1
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
 
-requirements = python3, kivy==master, materialyoucolor
+requirements = python3, kivy==master, materialyoucolor, https://github.com/kivymd/KivyMD/archive/master.zip, asynckivy
     # kivy==master,
     # materialyoucolor,
     # materialshapes,
