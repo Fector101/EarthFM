@@ -1,4 +1,4 @@
-name: Build Dev Apk
+name: Build
 
 on:
   workflow_dispatch:
